@@ -49,6 +49,7 @@
   const btnTestSettings = $('btnTestSettings');
   const btnForceSync = $('btnForceSync');
   const settingsHint = $('settingsHint');
+  const settingsError = $('settingsError');
   const ghOwner = $('ghOwner');
   const ghRepo = $('ghRepo');
   const ghBranch = $('ghBranch');
@@ -61,6 +62,7 @@
   const newTagEmoji = $('newTagEmoji');
   const newTagName = $('newTagName');
   const newTagColor = $('newTagColor');
+  const newTagColorBtn = $('newTagColorBtn');
   const newTagKey = $('newTagKey');
   const btnAddTag = $('btnAddTag');
 
@@ -122,8 +124,12 @@
   let DATA = {
     version: 1,
     updatedAt: new Date().toISOString(),
-    items: []
+    items: [],
+    tagDefs: []
   };
+  // ensure tagDefs exists in local data
+  DATA.tagDefs = normalizeTagDefsArray(SETTINGS.tagDefs) || defaultTagDefs();
+
   let SETTINGS = loadSettings();
   let CURRENT_EDIT_ID = null;
   let CURRENT_EDIT_LOCAL_IMAGES = []; // images added before save
@@ -211,6 +217,136 @@ function hexToRgba(hex, alpha=0.18) {
   }
 }
 
+
+// Normalize / validate tag definitions array
+function normalizeTagDefsArray(arr) {
+  if (!Array.isArray(arr)) return null;
+  const out = [];
+  for (const t of arr) {
+    if (!t) continue;
+    const id = normalizeText(t.id);
+    if (!id) continue;
+    out.push({
+      id,
+      name: normalizeText(t.name) || id,
+      emoji: normalizeText(t.emoji) || '🏷️',
+      color: normalizeText(t.color) || '#38bdf8'
+    });
+  }
+  return out;
+}
+
+// Ensure DATA has tagDefs and SETTINGS is updated from DATA (sync across devices)
+function ensureDataHasTagDefs(obj) {
+  if (!obj) obj = DATA;
+  if (!obj.items) obj.items = [];
+  // prefer remote-provided tagDefs; fallback to local settings/defaults
+  let defs = normalizeTagDefsArray(obj.tagDefs) || normalizeTagDefsArray(obj.tagsCatalog) || null;
+  if (!defs || !defs.length) {
+    defs = normalizeTagDefsArray(SETTINGS.tagDefs) || defaultTagDefs();
+  }
+  // Add placeholders for unknown tagIds referenced by items
+  const idSet = new Set(defs.map(d => d.id));
+  for (const it of (obj.items || [])) {
+    if (!it) continue;
+    if (Array.isArray(it.tagIds)) {
+      for (const tid of it.tagIds) {
+        const id = normalizeText(tid);
+        if (!id || idSet.has(id)) continue;
+        defs.push({ id, name: id, emoji: '🏷️', color: '#94a3b8' });
+        idSet.add(id);
+      }
+    }
+  }
+  obj.tagDefs = defs;
+  // persist in settings so UI shows them
+  SETTINGS.tagDefs = defs;
+  saveSettings({ tagDefs: defs });
+  return defs;
+}
+
+// ====== COLOR PICKER (Pickr) ======
+const __pickrMap = new WeakMap();
+const __pickrSwatches = [
+  '#6ee7ff','#38bdf8','#60a5fa','#a78bfa','#f472b6','#fb7185',
+  '#ff7a7a','#fbbf24','#ffd27a','#76f7a6','#34d399','#94a3b8',
+  '#ffffff','#0b0e14'
+];
+
+function setColorBtn(btn, color) {
+  if (!btn) return;
+  btn.style.background = color || '#38bdf8';
+}
+
+function initColorPicker(btn, input) {
+  if (!btn || !input) return;
+  const apply = (hex) => {
+    const val = normalizeText(hex) || '#38bdf8';
+    input.value = val;
+    setColorBtn(btn, val);
+  };
+  apply(input.value);
+  input.addEventListener('input', () => apply(input.value));
+
+  if (window.Pickr && !__pickrMap.has(btn)) {
+    const pickr = Pickr.create({
+      el: btn,
+      theme: 'nano',
+      default: input.value || '#38bdf8',
+      swatches: __pickrSwatches,
+      components: {
+        preview: true,
+        opacity: true,
+        hue: true,
+        interaction: {
+          hex: true,
+          rgba: true,
+          hsla: true,
+          input: true,
+          save: true
+        }
+      }
+    });
+    pickr.on('change', (color) => {
+      try {
+        const hex = color.toHEXA().toString();
+        apply(hex);
+      } catch {}
+    });
+    pickr.on('save', (color) => {
+      try {
+        const hex = color.toHEXA().toString();
+        apply(hex);
+      } catch {}
+      pickr.hide();
+    });
+    __pickrMap.set(btn, pickr);
+  }
+}
+
+function initTagRowPickers() {
+  if (!tagsManager) return;
+  for (const row of Array.from(tagsManager.querySelectorAll('.tagRow'))) {
+    const btn = row.querySelector('[data-action="pickColor"]');
+    const inp = row.querySelector('[data-field="color"]');
+    initColorPicker(btn, inp);
+  }
+}
+
+// Settings status helpers
+function showSettingsError(msg) {
+  if (!settingsError) return;
+  settingsError.style.display = 'block';
+  settingsError.textContent = msg || 'Error';
+  // Ensure visible on mobile
+  try { settingsError.scrollIntoView({block:'end'}); } catch {}
+}
+function clearSettingsError() {
+  if (!settingsError) return;
+  settingsError.style.display = 'none';
+  settingsError.textContent = '';
+}
+
 function tagDefs() {
   return Array.isArray(SETTINGS.tagDefs) && SETTINGS.tagDefs.length ? SETTINGS.tagDefs : defaultTagDefs();
 }
@@ -292,12 +428,15 @@ function renderTagsManagerUI() {
       <div class="tagRow" data-id="${id}">
         <input class="input" data-field="emoji" value="${em}" placeholder="🏷️" />
         <input class="input" data-field="name" value="${name}" placeholder="Nombre" />
-        <input class="input colorInput" data-field="color" type="color" value="${color}" />
+        <button class="colorBtn" type="button" data-action="pickColor" style="background:${color}" aria-label="Elegir color"></button>
+        <input class="input" data-field="color" value="${color}" placeholder="#rrggbb" />
         <button class="btn btnDanger btnTiny" type="button" data-action="deleteTag">Eliminar</button>
       </div>
     `;
   }).join('');
+  initTagRowPickers();
 }
+
 
 function readTagDefsFromManager() {
   if (!tagsManager) return tagDefs();
@@ -527,6 +666,7 @@ function readTagDefsFromManager() {
     if (!ghConfigured()) {
       const local = loadLocalData();
       if (local) DATA = local;
+      ensureDataHasTagDefs(DATA);
       if (!silent) renderAll();
       return;
     }
@@ -541,6 +681,8 @@ function readTagDefsFromManager() {
       const content = res.json.content ? b64ToUtf8(res.json.content) : '';
       const parsed = content ? JSON.parse(content) : { version:1, updatedAt: nowIso(), items: [] };
       if (!parsed.items) parsed.items = [];
+      parsed.items = Array.from(parsed.items || []).map(normalizeItemTags);
+      ensureDataHasTagDefs(parsed);
       DATA = parsed;
       LAST_REMOTE_SHA = res.json.sha;
       lsSet(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
@@ -553,6 +695,7 @@ function readTagDefsFromManager() {
       console.error(e);
       const local = loadLocalData();
       if (local) DATA = local;
+      ensureDataHasTagDefs(DATA);
       renderAll();
       renderSyncStatus('error', (e && e.message) ? e.message : 'Error');
       if (!silent) toast('Sin conexión a GitHub (usando local)', 'warn');
@@ -561,6 +704,9 @@ function readTagDefsFromManager() {
 
   async function saveToGitHubIfPossible({silent=false}={}) {
     DATA.updatedAt = nowIso();
+    // Include tag definitions in the synced JSON so other devices get new tags
+    DATA.tagDefs = normalizeTagDefsArray(SETTINGS.tagDefs) || defaultTagDefs();
+    ensureDataHasTagDefs(DATA);
     saveLocalData();
 
     if (!ghWritable()) {
@@ -1412,6 +1558,9 @@ function hideModal(backdropEl) {
     // tags
     SETTINGS.tagDefs = tagDefs();
     renderTagsManagerUI();
+    // init color picker for new tag
+    try { if (newTagColorBtn && newTagColor) initColorPicker(newTagColorBtn, newTagColor); } catch {}
+    clearSettingsError();
     settingsHint.textContent = '';
     showModal(settingsBackdrop);
   }
@@ -1421,6 +1570,7 @@ function hideModal(backdropEl) {
 
   async function testSettings() {
     settingsHint.textContent = 'Probando...';
+    clearSettingsError();
     try {
       const tmp = {
         owner: normalizeText(ghOwner.value),
@@ -1436,19 +1586,24 @@ function hideModal(backdropEl) {
       if (ghWritable()) {
         await ensureDataFileExists();
       }
+      clearSettingsError();
       settingsHint.textContent = '✅ OK. Se pudo leer (y escribir si hay token).';
       toast('Conexión OK', 'good');
       renderAll();
       startPolling();
     } catch (e) {
       console.error(e);
-      settingsHint.textContent = '❌ Error: ' + (e && e.message ? e.message : 'desconocido');
+      const msg = '❌ Error: ' + (e && e.message ? e.message : 'desconocido');
+      settingsHint.textContent = msg;
+      showSettingsError(msg);
       toast('Error de conexión', 'bad');
       renderAll();
     }
   }
 
   async function saveSettingsFromUI() {
+    clearSettingsError();
+    const newDefs = readTagDefsFromManager();
     saveSettings({
       owner: normalizeText(ghOwner.value),
       repo: normalizeText(ghRepo.value),
@@ -1456,12 +1611,34 @@ function hideModal(backdropEl) {
       dataPath: normalizeText(ghDataPath.value) || 'data/trackings.json',
       imageDir: normalizeText(ghImageDir.value) || 'data/images',
       token: normalizeText(ghToken.value),
-      tagDefs: readTagDefsFromManager()
+      tagDefs: newDefs
     });
-    settingsHint.textContent = 'Guardado. Recargando...';
-    await loadFromGitHubIfPossible();
+
+    settingsHint.textContent = 'Guardado. Sincronizando...';
+
+    // Pull latest first (avoid overwriting other device changes)
+    if (ghConfigured()) {
+      await loadFromGitHubIfPossible({ silent:true });
+    }
+
+    // Apply tag defs and push them so other devices see new tags
+    DATA.tagDefs = normalizeTagDefsArray(newDefs) || defaultTagDefs();
+    ensureDataHasTagDefs(DATA);
+    saveLocalData();
+
+    if (ghWritable()) {
+      await saveToGitHubIfPossible({ silent:true });
+      settingsHint.textContent = '✅ Guardado y sincronizado (incluye etiquetas).';
+      toast('Config OK + etiquetas sync', 'good');
+    } else {
+      settingsHint.textContent = '✅ Guardado (solo local). Para sincronizar necesitas token.';
+      toast('Config guardada (sin token)', 'warn');
+    }
+
+    renderAll();
     startPolling();
   }
+
 
   async function forceSync() {
     LAST_ETAG = null;
@@ -1499,6 +1676,9 @@ function hideModal(backdropEl) {
 
     DATA = parsed;
     DATA.updatedAt = nowIso();
+    // Include tag definitions in the synced JSON so other devices get new tags
+    DATA.tagDefs = normalizeTagDefsArray(SETTINGS.tagDefs) || defaultTagDefs();
+    ensureDataHasTagDefs(DATA);
     saveLocalData();
     await saveToGitHubIfPossible();
     renderAll();
@@ -1571,6 +1751,15 @@ function hideModal(backdropEl) {
   settingsBackdrop.addEventListener('click', (e) => {
     if (e.target === settingsBackdrop) closeSettings();
   });
+
+  // Prevent scrolling the page behind modals (mobile)
+  for (const bd of [loginBackdrop, settingsBackdrop, editBackdrop, galleryBackdrop]) {
+    if (!bd) continue;
+    bd.addEventListener('touchmove', (e) => {
+      if (!e.target.closest('.modal')) e.preventDefault();
+    }, { passive: false });
+  }
+
   btnSaveSettings.addEventListener('click', saveSettingsFromUI);
   btnTestSettings.addEventListener('click', testSettings);
   btnForceSync.addEventListener('click', forceSync);
@@ -1604,10 +1793,17 @@ if (btnAddTag) {
       div.innerHTML = `
         <input class="input" data-field="emoji" value="${escapeHtml(emoji)}" placeholder="🏷️" />
         <input class="input" data-field="name" value="${escapeHtml(name)}" placeholder="Nombre" />
-        <input class="input colorInput" data-field="color" type="color" value="${escapeHtml(color)}" />
+        <button class="colorBtn" type="button" data-action="pickColor" style="background:${escapeHtml(color)}" aria-label="Elegir color"></button>
+        <input class="input" data-field="color" value="${escapeHtml(color)}" placeholder="#rrggbb" />
         <button class="btn btnDanger btnTiny" type="button" data-action="deleteTag">Eliminar</button>
       `;
       tagsManager.appendChild(div);
+      // attach color picker
+      try {
+        const btn = div.querySelector('[data-action="pickColor"]');
+        const inp = div.querySelector('[data-field="color"]');
+        initColorPicker(btn, inp);
+      } catch {}
     }
     if (newTagName) newTagName.value = '';
     if (newTagKey) newTagKey.value = '';
