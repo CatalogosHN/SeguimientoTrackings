@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-21T08:35:05.137Z",
+  "updatedAt": "2026-02-21T08:35:20.485Z",
   "items": [
     {
       "id": "1771660762391-t2shfx7x",
@@ -45,20 +45,12 @@
           "localOnly": true
         },
         {
-          "path": "data/images/1771660762391-t2shfx7x/1771662901650_1.jpg",
-          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771660762391-t2shfx7x/1771662901650_1.jpg"
-        },
-        {
-          "path": "data/images/1771660762391-t2shfx7x/1771662901650_2.jpg",
-          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771660762391-t2shfx7x/1771662901650_2.jpg"
-        },
-        {
           "path": "data/images/1771660762391-t2shfx7x/1771662901650_3.jpg",
           "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771660762391-t2shfx7x/1771662901650_3.jpg"
         }
       ],
       "createdAt": "2026-02-21T07:59:52.338Z",
-      "updatedAt": "2026-02-21T08:35:01.650Z"
+      "updatedAt": "2026-02-21T08:35:20.485Z"
     },
     {
       "id": "1771660199342-7th3oh0c",
