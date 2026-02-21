@@ -106,6 +106,10 @@
   const fPayment = $('fPayment');
   const fNotes = $('fNotes');
   const fImages = $('fImages');
+  const fImagesCamera = $('fImagesCamera');
+  const btnPickImages = $('btnPickImages');
+  const btnCameraImages = $('btnCameraImages');
+  const pasteZone = $('pasteZone');
   const imageGrid = $('imageGrid');
   const metaCreated = $('metaCreated');
   const metaUpdated = $('metaUpdated');
@@ -710,6 +714,7 @@
     otherTrackings.innerHTML = '';
     imageGrid.innerHTML = '';
     fImages.value = '';
+    if (fImagesCamera) fImagesCamera.value = '';
 
     const it = id ? (DATA.items || []).find(x => x.id === id) : null;
 
@@ -1397,7 +1402,46 @@
     closeEdit();
   });
 
+  // Image pickers
+  if (btnPickImages) btnPickImages.addEventListener('click', () => fImages && fImages.click());
+  if (btnCameraImages) btnCameraImages.addEventListener('click', () => fImagesCamera && fImagesCamera.click());
+
   fImages.addEventListener('change', (e) => onImagesChosen(e.target.files));
+  if (fImagesCamera) fImagesCamera.addEventListener('change', (e) => onImagesChosen(e.target.files));
+
+  // Paste & drag/drop images (useful on PC)
+  function handlePasteImages(e) {
+    if (!editBackdrop.classList.contains('show')) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const files = [];
+    for (const it of items) {
+      if (it && it.type && it.type.startsWith('image/')) {
+        const f = it.getAsFile?.();
+        if (f) files.push(f);
+      }
+    }
+    if (files.length) {
+      e.preventDefault();
+      onImagesChosen(files);
+      toast(`Imagen${files.length>1?'es':''} pegada${files.length>1?'s':''} ✅`, 'good');
+    }
+  }
+  window.addEventListener('paste', handlePasteImages);
+
+  function wireDropZone(el) {
+    if (!el) return;
+    el.addEventListener('dragover', (e) => { e.preventDefault(); el.style.borderColor = 'rgba(110,231,255,.55)'; });
+    el.addEventListener('dragleave', () => { el.style.borderColor = ''; });
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.style.borderColor = '';
+      const files = Array.from(e.dataTransfer?.files || []).filter(f => (f.type||'').startsWith('image/'));
+      if (files.length) onImagesChosen(files);
+    });
+  }
+  wireDropZone(pasteZone);
+  wireDropZone(imageGrid);
 
   // Filters
   [searchInput, statusFilter, tagPesoRaro, tagInventario, tagEncargo].forEach(el => {
@@ -1458,6 +1502,25 @@
     if (e.key === 'ArrowLeft') galleryPrev();
     if (e.key === 'ArrowRight') galleryNext();
   });
+
+  // Swipe for gallery (mobile friendly)
+  let __swipeStartX = null;
+  if (galleryImg) {
+    galleryImg.addEventListener('touchstart', (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      __swipeStartX = t.clientX;
+    }, {passive:true});
+    galleryImg.addEventListener('touchend', (e) => {
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!t || __swipeStartX === null) return;
+      const dx = t.clientX - __swipeStartX;
+      __swipeStartX = null;
+      if (Math.abs(dx) < 45) return;
+      if (dx > 0) galleryPrev();
+      else galleryNext();
+    });
+  }
 
   // ====== INIT ======
   async function init() {

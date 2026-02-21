@@ -225,7 +225,7 @@ a{color:inherit}
 
 .muted{color:var(--muted)}
 .small{font-size:12px}
-.row{display:flex; gap:12px; margin-top:12px; align-items:center; justify-content:flex-end}
+.row{display:flex; gap:12px; margin-top:12px; align-items:center; justify-content:flex-end; flex-wrap:wrap}
 .label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
 .grid2{
   display:grid;
@@ -276,6 +276,9 @@ a{color:inherit}
   background: rgba(15,20,32,.94);
   box-shadow: var(--shadow);
   overflow:hidden;
+  max-height: calc(100vh - 28px);
+  display:flex;
+  flex-direction:column;
 }
 .modalLarge{width:min(1060px, 100%)}
 .loginModal{width:min(620px,100%)}
@@ -286,9 +289,14 @@ a{color:inherit}
   padding:14px 14px;
   border-bottom:1px solid var(--border);
   background: rgba(0,0,0,.18);
+  gap:10px;
+  flex-wrap:wrap;
+  position: sticky;
+  top:0;
+  z-index:2;
 }
-.modalTitle{font-weight:900; letter-spacing:.2px}
-.modalBody{padding:14px}
+.modalTitle{font-weight:900; letter-spacing:.2px; min-width:0}
+.modalBody{padding:14px; overflow:auto; -webkit-overflow-scrolling: touch;}
 
 .metaBox{
   width: 260px;
@@ -333,6 +341,7 @@ a{color:inherit}
   align-items:center;
   justify-content:center;
   gap:12px;
+  position:relative;
 }
 .galleryImg{
   width: 100%;
@@ -344,14 +353,26 @@ a{color:inherit}
 }
 .navBtn{
   border:1px solid var(--border);
-  border-radius: 14px;
-  padding:10px 12px;
+  border-radius: 999px;
+  width:44px;
+  height:44px;
+  padding:0;
   cursor:pointer;
   background: rgba(0,0,0,.22);
   color:var(--text);
   font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:absolute;
+  top:50%;
+  transform: translateY(-50%);
+  z-index:3;
+  backdrop-filter: blur(10px);
 }
 .navBtn:hover{filter:brightness(1.05)}
+#btnGalleryPrev{left:10px}
+#btnGalleryNext{right:10px}
 .galleryBar{
   margin-top:10px;
   display:flex;
@@ -404,5 +425,19 @@ a{color:inherit}
   .select{min-width: unset; width:100%}
   .cardActions .btn{flex:1; min-width:140px}
   .galleryMain{gap:8px}
-  .navBtn{padding:8px 10px}
+  .navBtn{width:48px; height:48px}
+  .galleryImg{max-height: 58vh}
 }
+
+/* Image helpers */
+.fileActions{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+.hiddenFile{display:none}
+.dropZone{
+  margin-top:10px;
+  border:1px dashed rgba(255,255,255,.22);
+  border-radius: var(--radius2);
+  padding:10px 12px;
+  color: var(--muted);
+  background: rgba(0,0,0,.12);
+}
+.dropZone:focus{outline:none; border-color: rgba(110,231,255,.55); box-shadow: 0 0 0 3px rgba(110,231,255,.12)}

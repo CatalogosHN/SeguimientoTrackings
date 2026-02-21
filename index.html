@@ -244,7 +244,14 @@
           <div style="flex:1">
             <label class="label">Imágenes del producto (opcional)</label>
             <div class="muted small">Se suben a tu repo (carpeta de imágenes). Si no hay token, se guardan solo local (no se sincronizan).</div>
-            <input class="input" id="fImages" type="file" accept="image/*" multiple />
+            <div class="fileActions">
+              <button class="btn btnGhost" id="btnPickImages" type="button">📁 Elegir archivos</button>
+              <button class="btn btnGhost" id="btnCameraImages" type="button">📷 Tomar fotos</button>
+              <span class="muted small">Tip: en PC puedes pegar imágenes con <b>Ctrl+V</b></span>
+            </div>
+            <input class="input hiddenFile" id="fImages" type="file" accept="image/*" multiple />
+            <input class="input hiddenFile" id="fImagesCamera" type="file" accept="image/*" capture="environment" multiple />
+            <div class="dropZone" id="pasteZone" tabindex="0">📋 Pega aquí (Ctrl+V) o arrastra y suelta imágenes</div>
             <div class="imageGrid" id="imageGrid"></div>
           </div>
 
