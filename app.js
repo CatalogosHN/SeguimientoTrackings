@@ -65,6 +65,8 @@
   const tagEncargo = $('tagEncargo');
 
   const syncStatus = $('syncStatus');
+  const btnPull = $('btnPull');
+  const btnPush = $('btnPush');
   const stats = $('stats');
   const list = $('list');
   const btnAdd = $('btnAdd');
@@ -156,8 +158,8 @@
     try {
       const raw = lsGet(LS_SETTINGS);
       if (!raw) return {
-        owner:'',
-        repo:'',
+        owner:'CatalogosHN',
+        repo:'SeguimientoTrackings',
         branch:'main',
         dataPath:'data/trackings.json',
         imageDir:'data/images',
@@ -165,8 +167,8 @@
       };
       const obj = JSON.parse(raw);
       return {
-        owner: obj.owner || '',
-        repo: obj.repo || '',
+        owner: obj.owner || 'CatalogosHN',
+        repo: obj.repo || 'SeguimientoTrackings',
         branch: obj.branch || 'main',
         dataPath: obj.dataPath || 'data/trackings.json',
         imageDir: obj.imageDir || 'data/images',
@@ -448,20 +450,74 @@
     }, 10000);
   }
 
+  async function manualPull() {
+    if (!ghConfigured()) {
+      toast('Primero configura GitHub en ⚙️ Config', 'warn');
+      openSettings();
+      return;
+    }
+    try {
+      renderSyncStatus('sync');
+      await loadFromGitHubIfPossible({silent:false});
+      toast('Datos actualizados', 'good');
+    } catch (e) {
+      console.error(e);
+      renderSyncStatus('error', (e && e.message) ? e.message : 'Error');
+      toast('No se pudo cargar', 'bad');
+    }
+  }
+
+  async function manualPush() {
+    if (!ghConfigured()) {
+      toast('Primero configura GitHub en ⚙️ Config', 'warn');
+      openSettings();
+      return;
+    }
+    if (!ghWritable()) {
+      toast('Necesitas token en ⚙️ Config para guardar en GitHub', 'warn');
+      openSettings();
+      return;
+    }
+    try {
+      renderSyncStatus('sync');
+      await saveToGitHubIfPossible({silent:false});
+    } catch (e) {
+      console.error(e);
+      renderSyncStatus('error', (e && e.message) ? e.message : 'Error');
+      toast('No se pudo guardar', 'bad');
+    }
+  }
+
+
+  function updateSyncButtons() {
+    if (!btnPull || !btnPush) return;
+    btnPull.disabled = !ghConfigured();
+    btnPush.disabled = !ghWritable();
+  }
+
   function renderSyncStatus(state=null, detail='') {
     let text = '';
     if (!ghConfigured()) {
       text = 'Sincronización: <span class="muted">no configurada</span>';
     } else if (!SETTINGS.token) {
-      text = 'Sincronización: <span class="badge warn">solo lectura (sin token)</span>';
+      if (state === 'sync') {
+        text = 'Sincronización: <span class="badge warn">cargando… (solo lectura)</span>';
+      } else if (state === 'error') {
+        text = `Sincronización: <span class="badge bad">error</span> <span class="muted small">${escapeHtml(detail || '')}</span>`;
+      } else {
+        text = 'Sincronización: <span class="badge warn">solo lectura (sin token)</span>';
+      }
     } else {
-      if (state === 'error') {
+      if (state === 'sync') {
+        text = 'Sincronización: <span class="badge">sincronizando…</span>';
+      } else if (state === 'error') {
         text = `Sincronización: <span class="badge bad">error</span> <span class="muted small">${escapeHtml(detail || '')}</span>`;
       } else {
         text = 'Sincronización: <span class="badge good">activa</span>';
       }
     }
     syncStatus.innerHTML = text;
+    updateSyncButtons();
   }
 
   // ====== RENDER ======
@@ -598,7 +654,9 @@
             </div>
           </div>
           <div class="cardActions">
-            <button class="btn btnGhost" data-act="copy" data-id="${it.id}">📋 Copiar</button>
+            <button class="btn btnGhost" data-act="copyInfo" data-id="${it.id}">📋 Copiar</button>
+            <button class="btn btnGhost" data-act="copyTracks" data-id="${it.id}">🔢 Copiar tracking</button>
+            <button class="btn btnGhost" data-act="wa" data-id="${it.id}">📲 WhatsApp</button>
             <button class="btn btnGhost" data-act="received" data-id="${it.id}">✅ Recibido</button>
             <button class="btn btnPrimary" data-act="edit" data-id="${it.id}">✏️ Editar</button>
           </div>
@@ -865,14 +923,195 @@
     toast('Marcado como recibido', 'good');
   }
 
-  function copyTracking(id) {
-    const it = (DATA.items || []).find(x => x.id === id);
-    if (!it) return;
-    const txt = compactTracking(it);
-    navigator.clipboard?.writeText(txt).then(() => toast('Copiado', 'good')).catch(() => toast('No se pudo copiar', 'bad'));
+  
+  function currencySymbol(cur) {
+    if (!cur) return '';
+    const c = String(cur).toUpperCase();
+    if (c === 'USD') return '$';
+    if (c === 'HNL') return 'L ';
+    return `${c} `;
   }
 
-  // ====== MODALS ======
+  function moneyPretty(it) {
+    const total = normalizeText(it.purchase?.total);
+    const cur = normalizeText(it.purchase?.currency) || 'USD';
+    if (!total) return '—';
+    const sym = currencySymbol(cur);
+    if (sym === '$') return `$${total}`;
+    if (sym === 'L ') return `L ${total}`;
+    return `${cur} ${total}`;
+  }
+
+  function statusEmoji(status) {
+    const s = (status || '').toLowerCase();
+    if (s.includes('esperando')) return '⌛';
+    if (s.includes('pendiente')) return '🕵️';
+    if (s.includes('recibido')) return '✅';
+    return '📌';
+  }
+
+  function tagsPretty(tags) {
+    const out = [];
+    if (tags?.inventario) out.push('📦 Inventario');
+    if (tags?.encargoCliente) out.push('👤 Encargo de cliente');
+    if (tags?.pesoRaro) out.push('⚠️ Peso/volumen raro');
+    return out;
+  }
+
+  function trackingsPrettyLines(it) {
+    const a = normalizeText(it.trackings?.original);
+    const b = normalizeText(it.trackings?.hn504);
+    const others = (it.trackings?.others || []).map(normalizeText).filter(Boolean);
+    const lines = [];
+    if (a) lines.push(`🔎 ORI: ${a}`);
+    if (b) lines.push(`🇭🇳 504: ${b}`);
+    if (others.length) lines.push(`➕ Otros: ${others.join(' | ')}`);
+    return lines;
+  }
+
+  function formatShareText(it, {imagesAttached=0, imagesTotal=0}={}) {
+    const title = normalizeText(it.title) || '(Sin título)';
+    const status = normalizeText(it.status) || '—';
+    const qty = (it.qty === null || it.qty === undefined || it.qty === '') ? '—' : String(it.qty);
+    const pay = normalizeText(it.purchase?.method) || '—';
+    const total = moneyPretty(it);
+
+    const lines = [];
+    lines.push(`📦 Producto: ${title}`);
+    lines.push('');
+    lines.push(`${statusEmoji(status)} ${status}`);
+
+    const trLines = trackingsPrettyLines(it);
+    if (trLines.length) {
+      lines.push('');
+      lines.push(...trLines);
+    }
+
+    if (qty !== '—') {
+      lines.push('');
+      lines.push(`🔢 Cantidad: ${qty}`);
+    }
+
+    if (total !== '—') {
+            lines.push(`💸 Total costo: ${total}`);
+    }
+    if (pay !== '—') lines.push(`💳 Pago: ${pay}`);
+
+    const tagLines = tagsPretty(it.tags);
+    if (tagLines.length) {
+      lines.push('');
+      lines.push(...tagLines);
+    }
+
+    const notes = normalizeText(it.notes);
+    if (notes) {
+      lines.push('');
+      lines.push(`📝 Notas: ${notes}`);
+    }
+
+    // Images note (best-effort)
+    if (imagesTotal > 0) {
+      lines.push('');
+      if (imagesAttached > 0) lines.push(`📷 Imágenes adjuntas: ${imagesAttached}/${imagesTotal}`);
+      else lines.push(`📷 Imágenes: ${imagesTotal}`);
+    }
+
+    lines.push('');
+    lines.push(`🕒 Editado: ${fmtDT(it.updatedAt)}`);
+
+    return lines.join('\\n');
+  }
+
+  function copyInfo(id) {
+    const it = (DATA.items || []).find(x => x.id === id);
+    if (!it) return;
+    const t = formatShareText(it, {imagesTotal: (it.images || []).length});
+    navigator.clipboard?.writeText(t).then(() => toast('Copiado', 'good')).catch(() => toast('No se pudo copiar', 'bad'));
+  }
+
+  function copyOnlyTrackings(id) {
+    const it = (DATA.items || []).find(x => x.id === id);
+    if (!it) return;
+    const title = normalizeText(it.title);
+    const lines = [];
+    if (title) lines.push(`📦 ${title}`);
+    const tr = trackingsPrettyLines(it);
+    if (tr.length) lines.push(...tr.map(x => x.replace('🔎 ', '').replace('🇭🇳 ', '').replace('➕ ', '')));
+    else lines.push('—');
+    const t = lines.join('\\n');
+    navigator.clipboard?.writeText(t).then(() => toast('Copiado', 'good')).catch(() => toast('No se pudo copiar', 'bad'));
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    const parts = String(dataUrl || '').split(',');
+    const meta = parts[0] || '';
+    const b64 = parts[1] || '';
+    const m = /data:([^;]+);base64/i.exec(meta);
+    const mime = m ? m[1] : 'application/octet-stream';
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  async function urlToFile(url, fallbackName='imagen.jpg') {
+    if (!url) return null;
+    // data URL
+    if (String(url).startsWith('data:')) {
+      const blob = dataUrlToBlob(url);
+      return new File([blob], fallbackName, { type: blob.type });
+    }
+    const res = await fetch(url, { mode:'cors' });
+    const blob = await res.blob();
+    const clean = String(url).split('?')[0];
+    const name = clean.split('/').pop() || fallbackName;
+    return new File([blob], name, { type: blob.type || 'image/jpeg' });
+  }
+
+  async function shareWhatsApp(id) {
+    const it = (DATA.items || []).find(x => x.id === id);
+    if (!it) return;
+
+    const imgs = (it.images || []).map(x => x && x.url).filter(Boolean);
+    const max = 5;
+    const toGet = imgs.slice(0, max);
+
+    let files = [];
+    for (let i=0;i<toGet.length;i++) {
+      try {
+        const f = await urlToFile(toGet[i], `imagen_${i+1}.jpg`);
+        if (f) files.push(f);
+      } catch (e) {
+        console.warn('No pude cargar imagen para compartir:', e);
+      }
+    }
+
+    const text = formatShareText(it, {imagesAttached: files.length, imagesTotal: imgs.length});
+
+    // Prefer native share (Android/iOS) -> WhatsApp
+    if (navigator.share) {
+      try {
+        if (files.length && navigator.canShare && navigator.canShare({ files })) {
+          await navigator.share({ title: it.title || 'Trackings USA', text, files });
+        } else {
+          await navigator.share({ title: it.title || 'Trackings USA', text });
+        }
+        toast('Compartido', 'good');
+        return;
+      } catch (e) {
+        // User cancelled or unsupported -> fallback
+        console.warn(e);
+      }
+    }
+
+    // Fallback: open WhatsApp with text (no images)
+    try { await navigator.clipboard?.writeText(text); } catch {}
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    toast(files.length ? 'Abrí WhatsApp con el texto (tu navegador no pudo adjuntar imágenes automáticamente)' : 'Abrí WhatsApp con el texto', files.length ? 'warn' : 'good');
+  }
+
+  
+// ====== MODALS ======
   function showModal(backdropEl) {
     backdropEl.classList.add('show');
     backdropEl.setAttribute('aria-hidden','false');
@@ -1053,6 +1292,8 @@
   btnForceSync.addEventListener('click', forceSync);
 
   btnAdd.addEventListener('click', () => openEdit(null));
+  btnPull && btnPull.addEventListener('click', manualPull);
+  btnPush && btnPush.addEventListener('click', manualPush);
   btnCloseEdit.addEventListener('click', closeEdit);
   editBackdrop.addEventListener('click', (e) => {
     if (e.target === editBackdrop) closeEdit();
@@ -1087,7 +1328,9 @@
     const id = btn.dataset.id;
     if (act === 'edit') openEdit(id);
     if (act === 'received') markReceived(id);
-    if (act === 'copy') copyTracking(id);
+    if (act === 'copyInfo') copyInfo(id);
+    if (act === 'copyTracks') copyOnlyTrackings(id);
+    if (act === 'wa') shareWhatsApp(id);
   });
 
   // Export/Import
