@@ -5,6 +5,23 @@
 (() => {
   'use strict';
 
+  // ====== SAFE STORAGE (localStorage can be blocked in some browsers/webviews) ======
+  // If localStorage fails, we fall back to in-memory storage so the UI still works.
+  const __memStore = Object.create(null);
+  let __storageOk = true;
+  const lsGet = (k) => {
+    try { return localStorage.getItem(k); }
+    catch { __storageOk = false; return Object.prototype.hasOwnProperty.call(__memStore, k) ? __memStore[k] : null; }
+  };
+  const lsSet = (k, v) => {
+    try { localStorage.setItem(k, v); }
+    catch { __storageOk = false; __memStore[k] = String(v); }
+  };
+  const lsRemove = (k) => {
+    try { localStorage.removeItem(k); }
+    catch { delete __memStore[k]; }
+  };
+
   // ====== BASIC "LOGIN" (visual lock) ======
   // In GitHub Pages there's no real secure auth. This is only a front-end lock.
   const AUTH_USER = 'admin';
@@ -92,7 +109,7 @@
   let CURRENT_EDIT_LOCAL_IMAGES = []; // images added before save
   let POLL_TIMER = null;
   let LAST_ETAG = null;
-  let LAST_REMOTE_SHA = localStorage.getItem(LS_LAST_REMOTE_SHA) || null;
+  let LAST_REMOTE_SHA = lsGet(LS_LAST_REMOTE_SHA) || null;
 
   // ====== UTILS ======
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -137,7 +154,7 @@
 
   function loadSettings() {
     try {
-      const raw = localStorage.getItem(LS_SETTINGS);
+      const raw = lsGet(LS_SETTINGS);
       if (!raw) return {
         owner:'',
         repo:'',
@@ -169,16 +186,16 @@
 
   function saveSettings(patch) {
     SETTINGS = { ...SETTINGS, ...patch };
-    localStorage.setItem(LS_SETTINGS, JSON.stringify(SETTINGS));
+    lsSet(LS_SETTINGS, JSON.stringify(SETTINGS));
   }
 
   function saveLocalData() {
-    localStorage.setItem(LS_LOCAL_DATA, JSON.stringify(DATA));
+    lsSet(LS_LOCAL_DATA, JSON.stringify(DATA));
   }
 
   function loadLocalData() {
     try {
-      const raw = localStorage.getItem(LS_LOCAL_DATA);
+      const raw = lsGet(LS_LOCAL_DATA);
       if (raw) {
         const obj = JSON.parse(raw);
         if (obj && Array.isArray(obj.items)) return obj;
@@ -229,8 +246,8 @@
   }
 
   function b64ToUtf8(b64) {
-    const bin = atob((b64 || '').replace(/
-/g,''));
+    // GitHub may return base64 with line breaks; remove any whitespace safely.
+    const bin = atob((b64 || '').replace(/\s/g, ''));
     const bytes = new Uint8Array(bin.length);
     for (let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
     return new TextDecoder('utf-8').decode(bytes);
@@ -362,7 +379,7 @@
       if (!parsed.items) parsed.items = [];
       DATA = parsed;
       LAST_REMOTE_SHA = res.json.sha;
-      localStorage.setItem(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
+      lsSet(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
 
       // store a local backup too
       saveLocalData();
@@ -397,7 +414,7 @@
       if (!res.notModified && res.json && res.json.sha) {
         currentSha = res.json.sha;
         LAST_REMOTE_SHA = currentSha;
-        localStorage.setItem(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
+        lsSet(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
       } else {
         currentSha = LAST_REMOTE_SHA;
       }
@@ -409,7 +426,7 @@
       const contentStr = JSON.stringify(DATA, null, 2);
       const out = await ghPutFile(SETTINGS.dataPath, contentStr, currentSha, 'Update trackings data');
       LAST_REMOTE_SHA = out.content && out.content.sha ? out.content.sha : LAST_REMOTE_SHA;
-      if (LAST_REMOTE_SHA) localStorage.setItem(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
+      if (LAST_REMOTE_SHA) lsSet(LS_LAST_REMOTE_SHA, LAST_REMOTE_SHA);
       renderSyncStatus('ok');
       if (!silent) toast('Guardado y sincronizado', 'good');
     } catch (e) {
@@ -968,7 +985,7 @@
   // ====== LOGIN FLOW ======
   function isAuthed() {
     try {
-      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+      const raw = lsGet(AUTH_STORAGE_KEY);
       if (!raw) return false;
       const obj = JSON.parse(raw);
       // session valid for 12h
@@ -1004,7 +1021,7 @@
     }
     const h = await sha256Hex(p);
     if (u === AUTH_USER && h === AUTH_PASS_HASH_SHA256) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ts: Date.now()}));
+      lsSet(AUTH_STORAGE_KEY, JSON.stringify({ts: Date.now()}));
       hideModal(loginBackdrop);
       toast('Bienvenido', 'good');
     } else {
@@ -1014,7 +1031,7 @@
   }
 
   function logout() {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    lsRemove(AUTH_STORAGE_KEY);
     requireLogin();
   }
 
