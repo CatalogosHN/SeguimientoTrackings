@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-21T08:35:28.777Z",
+  "updatedAt": "2026-02-21T08:36:03.493Z",
   "items": [
     {
       "id": "1771660762391-t2shfx7x",
@@ -47,10 +47,14 @@
         {
           "path": "data/images/1771660762391-t2shfx7x/1771662901650_3.jpg",
           "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771660762391-t2shfx7x/1771662901650_3.jpg"
+        },
+        {
+          "path": "data/images/1771660762391-t2shfx7x/1771662961517_1.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771660762391-t2shfx7x/1771662961517_1.jpg"
         }
       ],
       "createdAt": "2026-02-21T07:59:52.338Z",
-      "updatedAt": "2026-02-21T08:35:20.485Z"
+      "updatedAt": "2026-02-21T08:36:01.514Z"
     },
     {
       "id": "1771660199342-7th3oh0c",
