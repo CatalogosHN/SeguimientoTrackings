@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Trackings USA • Dashboard</title>
   <meta name="description" content="Organización de trackings de paquetes (USA) con sincronización vía GitHub." />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <header class="topbar">
@@ -161,7 +161,13 @@
           <div>
             <label class="label">Color de fondo</label>
             <input class="input" id="newTagColor" type="color" value="#2d6cdf" />
-          </div>
+            <button class="btn btnGhost" type="button" id="btnColorWheel" style="margin-top:8px">🎨 Paleta</button>
+          
+        <div class="wheelBox" id="colorWheelBox" style="display:none">
+          <div id="colorWheel"></div>
+          <div class="muted small" style="margin-top:8px">Tip: mueve el punto del círculo para elegir color (en PC también puedes escribir HEX en el campo).</div>
+        </div>
+</div>
         </div>
 
         <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:10px;">
@@ -313,6 +319,7 @@
     </div>
   </div>
 
-  <script defer src="app.js?v=9"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+  <script defer src="app.js?v=10"></script>
 </body>
 </html>

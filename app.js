@@ -5,6 +5,19 @@
 (() => {
   'use strict';
 
+  // ====== LAST ERROR (for debugging on mobile) ======
+  let LAST_ERROR = '';
+  function setLastError(e, where=''){
+    const msg = (e && e.message) ? e.message : String(e||'');
+    const stack = (e && e.stack) ? '\n' + e.stack : '';
+    LAST_ERROR = (where?(`[${where}] `):'') + msg + stack;
+  }
+  function shortErr(e, max=90){
+    const s = (e && e.message) ? e.message : String(e||'');
+    return s.length>max ? (s.slice(0,max-1)+'…') : s;
+  }
+
+
   // ====== SAFE STORAGE (localStorage can be blocked in some browsers/webviews) ======
   // If localStorage fails, we fall back to in-memory storage so the UI still works.
   const __memStore = Object.create(null);
@@ -49,12 +62,21 @@
   const btnTestSettings = $('btnTestSettings');
   const btnForceSync = $('btnForceSync');
   const settingsHint = $('settingsHint');
+  const settingsError = $('settingsError');
+  const btnCopyLastError = document.createElement('button');
+  btnCopyLastError.className='btn btnGhost';
+  btnCopyLastError.textContent='Copiar error';
+  btnCopyLastError.style.display='none';
+  btnCopyLastError.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(LAST_ERROR||''); toast('Error copiado','good'); } catch{ toast('No se pudo copiar','bad'); } });
+
   const ghOwner = $('ghOwner');
   const ghRepo = $('ghRepo');
   const ghBranch = $('ghBranch');
   const ghDataPath = $('ghDataPath');
   const ghImageDir = $('ghImageDir');
   const ghToken = $('ghToken');
+  // attach error-copy button under the hint
+  try{ settingsHint.parentElement.appendChild(btnCopyLastError); }catch{}
 
   // Tags settings
   const tagsManager = $('tagsManager');
@@ -63,6 +85,38 @@
   const newTagColor = $('newTagColor');
   const newTagKey = $('newTagKey');
   const btnAddTag = $('btnAddTag');
+  const btnColorWheel = $('btnColorWheel');
+  const colorWheelBox = $('colorWheelBox');
+  const colorWheelMount = $('colorWheel');
+  let __iro = null;
+
+  function ensureColorWheel(){
+    if (__iro || !colorWheelMount) return;
+    if (window.iro && window.iro.ColorPicker){
+      __iro = new iro.ColorPicker(colorWheelMount, { width: 240, color: newTagColor.value || '#2d6cdf' });
+      __iro.on('color:change', (c)=>{ try{ newTagColor.value = c.hexString; }catch{} });
+    }
+  }
+
+  if (btnColorWheel){
+    btnColorWheel.addEventListener('click', ()=>{
+      if (!colorWheelBox) return;
+      const show = colorWheelBox.style.display === 'none' || !colorWheelBox.style.display;
+      if (show){
+        colorWheelBox.style.display='block';
+        ensureColorWheel();
+        try{ if (__iro) __iro.color.hexString = newTagColor.value; }catch{}
+      } else {
+        colorWheelBox.style.display='none';
+      }
+    });
+  }
+  if (newTagColor){
+    newTagColor.addEventListener('input', ()=>{
+      try{ if (__iro) __iro.color.hexString = newTagColor.value; }catch{}
+    });
+  }
+
 
   const btnLogout = $('btnLogout');
 
@@ -608,7 +662,8 @@ function readTagDefsFromManager() {
     } catch (e) {
       console.error(e);
       renderSyncStatus('error', (e && e.message) ? e.message : 'Error');
-      if (!silent) toast('No se pudo subir (revisa token/permisos)', 'bad');
+      if (!silent) setLastError(e,'Guardar');
+      if (!silent) toast('No se pudo subir: ' + shortErr(e, 120), 'bad');
       // try to reload after a short delay
       await sleep(650);
       await loadFromGitHubIfPossible({silent:true});
@@ -637,7 +692,8 @@ function readTagDefsFromManager() {
     } catch (e) {
       console.error(e);
       renderSyncStatus('error', (e && e.message) ? e.message : 'Error');
-      toast('No se pudo cargar', 'bad');
+      setLastError(e,'Cargar');
+      toast('No se pudo cargar: ' + shortErr(e, 120), 'bad');
     }
   }
 
@@ -1449,12 +1505,18 @@ function hideModal(backdropEl) {
         await ensureDataFileExists();
       }
       settingsHint.textContent = '✅ OK. Se pudo leer (y escribir si hay token).';
+      settingsError.classList.remove('show'); settingsError.textContent=''; btnCopyLastError.style.display='none';
       toast('Conexión OK', 'good');
       renderAll();
       startPolling();
     } catch (e) {
       console.error(e);
       settingsHint.textContent = '❌ Error: ' + (e && e.message ? e.message : 'desconocido');
+      setLastError(e,'Probar conexión');
+      settingsError.classList.add('show');
+      settingsError.textContent = LAST_ERROR;
+      btnCopyLastError.style.display = LAST_ERROR ? 'inline-flex' : 'none';
+
       toast('Error de conexión', 'bad');
       renderAll();
     }

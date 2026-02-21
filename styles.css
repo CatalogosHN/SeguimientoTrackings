@@ -509,3 +509,25 @@ a{color:inherit}
   background: rgba(0,0,0,.12);
 }
 .dropZone:focus{outline:none; border-color: rgba(110,231,255,.55); box-shadow: 0 0 0 3px rgba(110,231,255,.12)}
+
+
+html, body { overscroll-behavior: none; }
+.modalBackdrop { touch-action: none; padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.modal, .modalBody { touch-action: pan-y; }
+.galleryThumbs { touch-action: pan-x; }
+#settingsError { display:none; }
+#settingsError.show { display:block; }
+
+
+.wheelBox{
+  margin-top:12px;
+  border:1px solid var(--border);
+  border-radius: var(--radius2);
+  padding:12px;
+  background: rgba(0,0,0,.18);
+}
+.wheelBox #colorWheel{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
