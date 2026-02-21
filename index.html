@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trackings USA • Dashboard</title>
+  <meta name="description" content="Organización de trackings de paquetes (USA) con sincronización vía GitHub." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">📦</div>
+      <div class="brandText">
+        <div class="brandTitle">Trackings USA</div>
+        <div class="brandSubtitle">Organizador + Sync (GitHub)</div>
+      </div>
+    </div>
+
+    <div class="topbarActions">
+      <button class="btn btnGhost" id="btnOpenSettings" title="Configurar GitHub / Token">⚙️ Config</button>
+      <button class="btn btnGhost" id="btnExport" title="Exportar respaldo JSON">⬇️ Exportar</button>
+      <label class="btn btnGhost" title="Importar respaldo JSON">
+        ⬆️ Importar
+        <input id="importFile" type="file" accept="application/json" hidden />
+      </label>
+      <button class="btn btnDanger" id="btnLogout" title="Cerrar sesión">⛔ Salir</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="toolbar">
+      <div class="toolbarLeft">
+        <input id="searchInput" class="input" placeholder="Buscar: título, tracking, método, notas..." />
+        <select id="statusFilter" class="select">
+          <option value="__all__">Todos los estados</option>
+          <option value="Esperando tracking">Esperando tracking</option>
+          <option value="Pendiente de seguimiento">Pendiente de seguimiento</option>
+          <option value="Recibido en Estados Unidos">Recibido en Estados Unidos</option>
+        </select>
+
+        <div class="tagFilters">
+          <label class="chip">
+            <input type="checkbox" id="tagPesoRaro" />
+            Peso/volumen raro
+          </label>
+          <label class="chip">
+            <input type="checkbox" id="tagInventario" />
+            Inventario
+          </label>
+          <label class="chip">
+            <input type="checkbox" id="tagEncargo" />
+            Encargo de cliente
+          </label>
+        </div>
+      </div>
+
+      <div class="toolbarRight">
+        <div class="syncStatus" id="syncStatus">Sincronización: <span class="muted">no configurada</span></div>
+        <button class="btn btnPrimary" id="btnAdd">➕ Agregar</button>
+      </div>
+    </section>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="list" id="list"></section>
+
+    <footer class="footer">
+      <div>Actualiza desde cualquier PC o móvil usando el mismo repo + token (no guardes tu token en GitHub).</div>
+      <div class="muted">Creador: <b>Brayan Raudales Tu Papi</b></div>
+    </footer>
+  </main>
+
+  <!-- LOGIN -->
+  <div class="modalBackdrop" id="loginBackdrop" aria-hidden="true">
+    <div class="modal loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+      <div class="modalHeader">
+        <div class="modalTitle" id="loginTitle">🔐 Iniciar sesión</div>
+      </div>
+      <div class="modalBody">
+        <p class="muted" style="margin-top:0">
+          Nota: En GitHub Pages no existe login “real” (no hay servidor). Esto es un candado visual para que no cualquiera use tu tablero.
+        </p>
+        <div class="grid2">
+          <div>
+            <label class="label">Usuario</label>
+            <input class="input" id="loginUser" autocomplete="username" />
+          </div>
+          <div>
+            <label class="label">Contraseña</label>
+            <input class="input" id="loginPass" type="password" autocomplete="current-password" />
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn btnPrimary" id="btnLogin">Entrar</button>
+        </div>
+        <div class="error" id="loginError" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="modalBackdrop" id="settingsBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modalHeader">
+        <div class="modalTitle" id="settingsTitle">⚙️ Configuración (GitHub Sync)</div>
+        <button class="iconBtn" id="btnCloseSettings" aria-label="Cerrar">✖</button>
+      </div>
+      <div class="modalBody">
+        <div class="callout">
+          <b>Cómo funciona el “tiempo real”:</b> se guarda un JSON en tu repo y la página revisa cambios automáticamente (polling). Para escribir, se usa tu token (guardado en tu navegador).
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label class="label">GitHub Owner (usuario u organización)</label>
+            <input class="input" id="ghOwner" placeholder="Ej: BrayanRaudalesHN" />
+          </div>
+          <div>
+            <label class="label">Repo</label>
+            <input class="input" id="ghRepo" placeholder="Ej: trackings-usa" />
+          </div>
+
+          <div>
+            <label class="label">Branch</label>
+            <input class="input" id="ghBranch" placeholder="main" />
+          </div>
+          <div>
+            <label class="label">Ruta del JSON (data)</label>
+            <input class="input" id="ghDataPath" placeholder="data/trackings.json" />
+          </div>
+
+          <div>
+            <label class="label">Carpeta de imágenes</label>
+            <input class="input" id="ghImageDir" placeholder="data/images" />
+          </div>
+          <div>
+            <label class="label">Token (Fine-grained PAT) — SOLO para este repo</label>
+            <input class="input" id="ghToken" placeholder="ghp_..." />
+          </div>
+        </div>
+
+        <details class="details">
+          <summary>📌 Recomendado para el token (rápido)</summary>
+          <ul>
+            <li>Crea un <b>Fine-grained personal access token</b> en GitHub y dale acceso solo a este repo.</li>
+            <li>Permisos mínimos: <b>Contents: Read and Write</b>.</li>
+            <li>Nunca pegues el token dentro de archivos del repo. Aquí se guarda en tu navegador (localStorage).</li>
+          </ul>
+        </details>
+
+        <div class="row" style="gap:10px; flex-wrap:wrap;">
+          <button class="btn btnPrimary" id="btnSaveSettings">Guardar</button>
+          <button class="btn btnGhost" id="btnTestSettings">Probar conexión</button>
+          <button class="btn btnGhost" id="btnForceSync">Forzar recarga</button>
+        </div>
+
+        <div class="hint muted" id="settingsHint"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT / ADD -->
+  <div class="modalBackdrop" id="editBackdrop" aria-hidden="true">
+    <div class="modal modalLarge" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <div class="modalHeader">
+        <div class="modalTitle" id="editTitle">📦 Registro</div>
+        <button class="iconBtn" id="btnCloseEdit" aria-label="Cerrar">✖</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="grid2">
+          <div>
+            <label class="label">Título / Producto</label>
+            <input class="input" id="fTitle" placeholder="Ej: Fundas iPhone 15" />
+          </div>
+          <div>
+            <label class="label">Cantidad</label>
+            <input class="input" id="fQty" type="number" min="0" step="1" placeholder="Ej: 10" />
+          </div>
+
+          <div>
+            <label class="label">Tracking original</label>
+            <input class="input" id="fTrackingOriginal" placeholder="Ej: 1Z..." />
+          </div>
+          <div>
+            <label class="label">Tracking 504 HN</label>
+            <input class="input" id="fTracking504" placeholder="Ej: 504..." />
+          </div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1">
+            <label class="label">Otros trackings (opcional)</label>
+            <div id="otherTrackings"></div>
+            <button class="btn btnGhost" id="btnAddOtherTracking">➕ Agregar otro tracking</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label class="label">Estado</label>
+            <select class="select" id="fStatus">
+              <option value="Esperando tracking">Esperando tracking</option>
+              <option value="Pendiente de seguimiento">Pendiente de seguimiento</option>
+              <option value="Recibido en Estados Unidos">Recibido en Estados Unidos</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label">Etiquetas</label>
+            <div class="tagPickers">
+              <label class="chip"><input type="checkbox" id="fTagPesoRaro" /> Peso/volumen raro</label>
+              <label class="chip"><input type="checkbox" id="fTagInventario" /> Inventario</label>
+              <label class="chip"><input type="checkbox" id="fTagEncargo" /> Encargo de cliente</label>
+            </div>
+          </div>
+
+          <div>
+            <label class="label">Total compra</label>
+            <input class="input" id="fTotal" placeholder="Ej: 120.50" />
+          </div>
+          <div>
+            <label class="label">Moneda</label>
+            <select class="select" id="fCurrency">
+              <option value="USD">USD</option>
+              <option value="HNL">HNL</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label">Método de pago</label>
+            <input class="input" id="fPayment" placeholder="Ej: Tarjeta / Transferencia / PayPal / Zelle" />
+          </div>
+          <div>
+            <label class="label">Notas (opcional)</label>
+            <input class="input" id="fNotes" placeholder="Ej: Llegó en 2 cajas / OJO peso raro" />
+          </div>
+        </div>
+
+        <div class="row" style="align-items:flex-start; gap:14px;">
+          <div style="flex:1">
+            <label class="label">Imágenes del producto (opcional)</label>
+            <div class="muted small">Se suben a tu repo (carpeta de imágenes). Si no hay token, se guardan solo local (no se sincronizan).</div>
+            <input class="input" id="fImages" type="file" accept="image/*" multiple />
+            <div class="imageGrid" id="imageGrid"></div>
+          </div>
+
+          <div class="metaBox">
+            <div><span class="muted">Creado:</span> <span id="metaCreated">—</span></div>
+            <div><span class="muted">Editado:</span> <span id="metaUpdated">—</span></div>
+            <div class="muted small" style="margin-top:8px">
+              Consejo: si aún no tienes tracking, deja vacío y usa “Esperando tracking”.
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="gap:10px; flex-wrap:wrap;">
+          <button class="btn btnPrimary" id="btnSave">Guardar</button>
+          <button class="btn btnGhost" id="btnMarkReceived">✅ Marcar recibido (USA)</button>
+          <button class="btn btnDanger" id="btnDelete">🗑️ Eliminar</button>
+        </div>
+
+        <div class="hint muted" id="editHint"></div>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="app.js"></script>
+</body>
+</html>
