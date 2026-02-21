@@ -74,6 +74,16 @@
   const btnExport = $('btnExport');
   const importFile = $('importFile');
 
+  // Gallery
+  const galleryBackdrop = $('galleryBackdrop');
+  const btnCloseGallery = $('btnCloseGallery');
+  const btnGalleryPrev = $('btnGalleryPrev');
+  const btnGalleryNext = $('btnGalleryNext');
+  const galleryImg = $('galleryImg');
+  const galleryCounter = $('galleryCounter');
+  const galleryCaption = $('galleryCaption');
+  const galleryThumbs = $('galleryThumbs');
+
   const editBackdrop = $('editBackdrop');
   const btnCloseEdit = $('btnCloseEdit');
   const btnSave = $('btnSave');
@@ -112,6 +122,9 @@
   let POLL_TIMER = null;
   let LAST_ETAG = null;
   let LAST_REMOTE_SHA = lsGet(LS_LAST_REMOTE_SHA) || null;
+
+  // Gallery state
+  let GALLERY = { images: [], index: 0, title: '' };
 
   // ====== UTILS ======
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -632,31 +645,47 @@
       const created = fmtDT(it.createdAt);
 
       const hasImages = (it.images && it.images.length) ? `<span class="badge">🖼️ ${it.images.length}</span>` : '';
+      const thumbUrl = (it.images && it.images.length) ? (it.images[0].url || '') : '';
       const total = escapeHtml(moneyText(it));
       const pay = escapeHtml(it.purchase?.method || '—');
+
+      const thumbHtml = (thumbUrl)
+        ? `
+          <div class="miniThumb" role="button" tabindex="0" title="Ver fotos" data-act="photos" data-id="${it.id}">
+            <img src="${escapeHtml(thumbUrl)}" alt="foto" />
+            <div class="miniCount">${it.images.length}</div>
+          </div>
+        `
+        : '';
 
       return `
         <div class="card">
           <div class="cardLeft">
-            <div class="cardTitle">
-              <div class="hTitle">${title}</div>
-              ${status}
-              ${hasImages}
-              ${tags}
-            </div>
-            <div class="cardMeta">
-              <span>Qty: <b>${qty}</b></span>
-              <span class="mono">${tr}</span>
-              <span>Total: <b>${total}</b></span>
-              <span>Pago: <b>${pay}</b></span>
-              <span class="muted">Creado: ${created}</span>
-              <span class="muted">Editado: ${updated}</span>
+            <div class="cardMedia">
+              ${thumbHtml}
+              <div style="flex:1; min-width:0">
+                <div class="cardTitle">
+                  <div class="hTitle">${title}</div>
+                  ${status}
+                  ${hasImages}
+                  ${tags}
+                </div>
+                <div class="cardMeta">
+                  <span>Qty: <b>${qty}</b></span>
+                  <span class="mono">${tr}</span>
+                  <span>Total: <b>${total}</b></span>
+                  <span>Pago: <b>${pay}</b></span>
+                  <span class="muted">Creado: ${created}</span>
+                  <span class="muted">Editado: ${updated}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="cardActions">
             <button class="btn btnGhost" data-act="copyInfo" data-id="${it.id}">📋 Copiar</button>
             <button class="btn btnGhost" data-act="copyTracks" data-id="${it.id}">🔢 Copiar tracking</button>
             <button class="btn btnGhost" data-act="wa" data-id="${it.id}">📲 WhatsApp</button>
+            ${(it.images && it.images.length) ? `<button class="btn btnGhost" data-act="photos" data-id="${it.id}">🖼️ Fotos</button>` : ''}
             <button class="btn btnGhost" data-act="received" data-id="${it.id}">✅ Recibido</button>
             <button class="btn btnPrimary" data-act="edit" data-id="${it.id}">✏️ Editar</button>
           </div>
@@ -779,6 +808,14 @@
           <button class="xBtn" data-del-img="${idx}">Eliminar</button>
         </div>
       `;
+      // open preview gallery
+      div.querySelector('img').addEventListener('click', () => {
+        const urls = (images || []).map(x => x && x.url).filter(Boolean);
+        if (!urls.length) return;
+        GALLERY = { images: urls, index: idx, title: normalizeText(fTitle.value) || 'Fotos' };
+        renderGallery();
+        showModal(galleryBackdrop);
+      });
       div.querySelector('[data-del-img]').addEventListener('click', () => {
         const item = JSON.parse(editBackdrop.dataset.item || '{}');
         item.images = (item.images || []).filter((_,i) => i !== idx);
@@ -992,9 +1029,7 @@
       lines.push(`🔢 Cantidad: ${qty}`);
     }
 
-    if (total !== '—') {
-            lines.push(`💸 Total costo: ${total}`);
-    }
+    if (total !== '—') lines.push(`💸 Total costo: ${total}`);
     if (pay !== '—') lines.push(`💳 Pago: ${pay}`);
 
     const tagLines = tagsPretty(it.tags);
@@ -1019,7 +1054,7 @@
     lines.push('');
     lines.push(`🕒 Editado: ${fmtDT(it.updatedAt)}`);
 
-    return lines.join('\\n');
+    return lines.join('\n');
   }
 
   function copyInfo(id) {
@@ -1038,7 +1073,7 @@
     const tr = trackingsPrettyLines(it);
     if (tr.length) lines.push(...tr.map(x => x.replace('🔎 ', '').replace('🇭🇳 ', '').replace('➕ ', '')));
     else lines.push('—');
-    const t = lines.join('\\n');
+    const t = lines.join('\n');
     navigator.clipboard?.writeText(t).then(() => toast('Copiado', 'good')).catch(() => toast('No se pudo copiar', 'bad'));
   }
 
@@ -1086,28 +1121,32 @@
       }
     }
 
-    const text = formatShareText(it, {imagesAttached: files.length, imagesTotal: imgs.length});
+    const text = formatShareText(it, {imagesTotal: imgs.length});
 
-    // Prefer native share (Android/iOS) -> WhatsApp
+    // Copy text first so you can paste it once as the album caption in WhatsApp.
+    try { await navigator.clipboard?.writeText(text); } catch {}
+
+    // Prefer native share with ONLY files to avoid WhatsApp repeating the caption per image.
+    // The user can paste the copied text once as the caption.
     if (navigator.share) {
       try {
         if (files.length && navigator.canShare && navigator.canShare({ files })) {
-          await navigator.share({ title: it.title || 'Trackings USA', text, files });
-        } else {
-          await navigator.share({ title: it.title || 'Trackings USA', text });
+          await navigator.share({ title: it.title || 'Trackings USA', files });
+          toast(files.length ? 'Imágenes compartidas ✅ (texto copiado: pégalo 1 vez como descripción)' : 'Compartido', 'good');
+          return;
         }
+        // If no files or cannot share files, share text.
+        await navigator.share({ title: it.title || 'Trackings USA', text });
         toast('Compartido', 'good');
         return;
       } catch (e) {
-        // User cancelled or unsupported -> fallback
         console.warn(e);
       }
     }
 
     // Fallback: open WhatsApp with text (no images)
-    try { await navigator.clipboard?.writeText(text); } catch {}
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    toast(files.length ? 'Abrí WhatsApp con el texto (tu navegador no pudo adjuntar imágenes automáticamente)' : 'Abrí WhatsApp con el texto', files.length ? 'warn' : 'good');
+    toast(files.length ? 'Abrí WhatsApp con el texto (si quieres, adjunta las imágenes manualmente)' : 'Abrí WhatsApp con el texto', files.length ? 'warn' : 'good');
   }
 
   
@@ -1119,6 +1158,52 @@
   function hideModal(backdropEl) {
     backdropEl.classList.remove('show');
     backdropEl.setAttribute('aria-hidden','true');
+  }
+
+  // ====== GALLERY ======
+  function openGalleryForItem(id, startIndex=0) {
+    const it = (DATA.items || []).find(x => x.id === id);
+    if (!it) return;
+    const imgs = (it.images || []).map(x => x && x.url).filter(Boolean);
+    if (!imgs.length) return;
+    GALLERY = { images: imgs, index: Math.max(0, Math.min(startIndex, imgs.length-1)), title: it.title || 'Fotos' };
+    renderGallery();
+    showModal(galleryBackdrop);
+  }
+
+  function closeGallery() {
+    hideModal(galleryBackdrop);
+  }
+
+  function renderGallery() {
+    const imgs = GALLERY.images || [];
+    const n = imgs.length;
+    if (!n) {
+      galleryImg.src = '';
+      galleryCounter.textContent = '0 / 0';
+      galleryThumbs.innerHTML = '';
+      return;
+    }
+    const i = ((GALLERY.index % n) + n) % n;
+    GALLERY.index = i;
+    galleryImg.src = imgs[i];
+    galleryCounter.textContent = `${i+1} / ${n}`;
+    galleryCaption.textContent = GALLERY.title ? `📦 ${GALLERY.title}` : '';
+
+    // thumbs
+    galleryThumbs.innerHTML = imgs.map((u, idx) => {
+      const active = idx === i ? 'active' : '';
+      return `<div class="gThumb ${active}" data-gidx="${idx}" title="${idx+1}"><img src="${escapeHtml(u)}" alt="thumb"/></div>`;
+    }).join('');
+  }
+
+  function galleryPrev() {
+    GALLERY.index = (GALLERY.index || 0) - 1;
+    renderGallery();
+  }
+  function galleryNext() {
+    GALLERY.index = (GALLERY.index || 0) + 1;
+    renderGallery();
   }
 
   // ====== SETTINGS UI ======
@@ -1322,15 +1407,16 @@
 
   // List actions (delegation)
   list.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-act]');
-    if (!btn) return;
-    const act = btn.dataset.act;
-    const id = btn.dataset.id;
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const act = el.dataset.act;
+    const id = el.dataset.id;
     if (act === 'edit') openEdit(id);
     if (act === 'received') markReceived(id);
     if (act === 'copyInfo') copyInfo(id);
     if (act === 'copyTracks') copyOnlyTrackings(id);
     if (act === 'wa') shareWhatsApp(id);
+    if (act === 'photos') openGalleryForItem(id, 0);
   });
 
   // Export/Import
@@ -1346,6 +1432,31 @@
     if (e.key !== 'Escape') return;
     if (editBackdrop.classList.contains('show')) closeEdit();
     if (settingsBackdrop.classList.contains('show')) closeSettings();
+    if (galleryBackdrop && galleryBackdrop.classList.contains('show')) closeGallery();
+  });
+
+  // Gallery events
+  if (btnCloseGallery) btnCloseGallery.addEventListener('click', closeGallery);
+  if (galleryBackdrop) {
+    galleryBackdrop.addEventListener('click', (e) => {
+      if (e.target === galleryBackdrop) closeGallery();
+    });
+  }
+  if (btnGalleryPrev) btnGalleryPrev.addEventListener('click', galleryPrev);
+  if (btnGalleryNext) btnGalleryNext.addEventListener('click', galleryNext);
+  if (galleryThumbs) {
+    galleryThumbs.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-gidx]');
+      if (!t) return;
+      GALLERY.index = Number(t.dataset.gidx || 0);
+      renderGallery();
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (!galleryBackdrop || !galleryBackdrop.classList.contains('show')) return;
+    if (e.key === 'ArrowLeft') galleryPrev();
+    if (e.key === 'ArrowRight') galleryNext();
   });
 
   // ====== INIT ======

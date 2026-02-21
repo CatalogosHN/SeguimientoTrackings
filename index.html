@@ -268,6 +268,28 @@
     </div>
   </div>
 
+  <!-- GALLERY / VIEW PHOTOS -->
+  <div class="modalBackdrop" id="galleryBackdrop" aria-hidden="true">
+    <div class="modal modalLarge" role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
+      <div class="modalHeader">
+        <div class="modalTitle" id="galleryTitle">🖼️ Fotos</div>
+        <button class="iconBtn" id="btnCloseGallery" aria-label="Cerrar">✖</button>
+      </div>
+      <div class="modalBody">
+        <div class="galleryMain">
+          <button class="navBtn" id="btnGalleryPrev" aria-label="Anterior">◀</button>
+          <img id="galleryImg" class="galleryImg" alt="Foto" />
+          <button class="navBtn" id="btnGalleryNext" aria-label="Siguiente">▶</button>
+        </div>
+        <div class="galleryBar">
+          <div class="muted" id="galleryCounter">0 / 0</div>
+          <div class="muted small" id="galleryCaption"></div>
+        </div>
+        <div class="galleryThumbs" id="galleryThumbs"></div>
+      </div>
+    </div>
+  </div>
+
   <script defer src="app.js"></script>
 </body>
 </html>
