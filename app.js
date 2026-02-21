@@ -241,6 +241,75 @@ function defaultTagDefs() {
   ];
 }
 
+// Normalize tag definitions to a stable array shape so they can be stored in JSON
+// and shared across devices.
+function normalizeTagDefsArray(input) {
+  const fallbackColor = '#22c55e';
+  const toId = (s) => (String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u00C0-\u017F]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/(^-|-$)/g, '')) || ('tag-' + Math.random().toString(16).slice(2));
+
+  const normOne = (def, forcedId=null) => {
+    if (!def) return null;
+    if (typeof def === 'string') {
+      const name = def.trim();
+      const id = forcedId || toId(name);
+      return { id, name, emoji: '🏷️', color: fallbackColor };
+    }
+    if (typeof def !== 'object') return null;
+    const name = (def.name || def.label || def.title || forcedId || def.id || '').toString().trim();
+    const id = (def.id || forcedId || toId(name));
+    return {
+      id,
+      name: name || id,
+      emoji: (def.emoji || '🏷️').toString(),
+      color: (def.color || def.bg || def.background || fallbackColor).toString(),
+    };
+  };
+
+  if (!input) return [];
+  // Array form
+  if (Array.isArray(input)) {
+    return input.map(v => normOne(v)).filter(Boolean);
+  }
+  // Object map form: { id: {name,emoji,color} }
+  if (typeof input === 'object') {
+    return Object.entries(input).map(([id, v]) => normOne(v, id)).filter(Boolean);
+  }
+  return [];
+}
+
+// Ensure DATA and SETTINGS have tag definitions; if items reference unknown tags,
+// create placeholders so they can still render on any device.
+function ensureDataHasTagDefs(data) {
+  if (!data) return;
+  if (!data.items) data.items = [];
+  const merged = normalizeTagDefsArray(data.tagDefs) || [];
+  const fromSettings = normalizeTagDefsArray(SETTINGS.tagDefs) || [];
+  const defs = (merged.length ? merged : (fromSettings.length ? fromSettings : defaultTagDefs()));
+
+  const byId = new Map();
+  defs.forEach(d => { if (d && d.id) byId.set(d.id, d); });
+
+  // Add placeholders for any unknown tag IDs used by items.
+  data.items.forEach(it => {
+    (it.tags || []).forEach(id => {
+      if (!id) return;
+      if (!byId.has(id)) {
+        const ph = { id, name: id, emoji: '🏷️', color: '#64748b' };
+        byId.set(id, ph);
+      }
+    });
+  });
+
+  const out = Array.from(byId.values());
+  data.tagDefs = out;
+  SETTINGS.tagDefs = out;
+}
+
 function slugify(s) {
   return normalizeText(s).toLowerCase()
     .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
