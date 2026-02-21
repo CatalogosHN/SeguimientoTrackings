@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-21T23:20:05.219Z",
+  "updatedAt": "2026-02-21T23:20:17.975Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -156,11 +156,6 @@
         "others": []
       },
       "status": "Esperando tracking",
-      "tags": {
-        "pesoRaro": false,
-        "inventario": true,
-        "encargoCliente": true
-      },
       "purchase": {
         "total": "1255",
         "currency": "HNL",
@@ -175,10 +170,11 @@
         }
       ],
       "createdAt": "2026-02-21T07:25:15.605Z",
-      "updatedAt": "2026-02-21T07:25:15.605Z",
+      "updatedAt": "2026-02-21T23:20:17.975Z",
       "tagIds": [
         "inventario",
-        "encargoCliente"
+        "encargoCliente",
+        "carteras-1"
       ]
     },
     {
