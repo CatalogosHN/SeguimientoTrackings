@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-21T09:18:15.404Z",
+  "updatedAt": "2026-02-21T09:18:43.093Z",
   "items": [
     {
       "id": "1771664704496-zc3qrixm",
@@ -45,11 +45,6 @@
         "others": []
       },
       "status": "Recibido en Estados Unidos",
-      "tags": {
-        "pesoRaro": true,
-        "inventario": true,
-        "encargoCliente": true
-      },
       "purchase": {
         "total": "12500",
         "currency": "HNL",
@@ -82,11 +77,12 @@
         }
       ],
       "createdAt": "2026-02-21T07:59:52.338Z",
-      "updatedAt": "2026-02-21T08:38:10.953Z",
+      "updatedAt": "2026-02-21T09:18:43.093Z",
       "tagIds": [
         "pesoRaro",
         "inventario",
-        "encargoCliente"
+        "encargoCliente",
+        "caca-seca"
       ]
     },
     {
