@@ -56,13 +56,20 @@
   const ghImageDir = $('ghImageDir');
   const ghToken = $('ghToken');
 
+  // Tags settings
+  const tagsManager = $('tagsManager');
+  const newTagEmoji = $('newTagEmoji');
+  const newTagName = $('newTagName');
+  const newTagColor = $('newTagColor');
+  const newTagKey = $('newTagKey');
+  const btnAddTag = $('btnAddTag');
+
   const btnLogout = $('btnLogout');
 
   const searchInput = $('searchInput');
   const statusFilter = $('statusFilter');
-  const tagPesoRaro = $('tagPesoRaro');
-  const tagInventario = $('tagInventario');
-  const tagEncargo = $('tagEncargo');
+  const tagFiltersWrap = $('tagFilters');
+  const tagPickersWrap = $('tagPickers');
 
   const syncStatus = $('syncStatus');
   const btnPull = $('btnPull');
@@ -98,9 +105,6 @@
   const otherTrackings = $('otherTrackings');
   const btnAddOtherTracking = $('btnAddOtherTracking');
   const fStatus = $('fStatus');
-  const fTagPesoRaro = $('fTagPesoRaro');
-  const fTagInventario = $('fTagInventario');
-  const fTagEncargo = $('fTagEncargo');
   const fTotal = $('fTotal');
   const fCurrency = $('fCurrency');
   const fPayment = $('fPayment');
@@ -171,6 +175,144 @@
     return (str || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   }
 
+// ====== TAGS (customizable) ======
+function defaultTagDefs() {
+  return [
+    { id:'pesoRaro', name:'Peso/volumen raro', emoji:'⚠️', color:'#ff7a7a' },
+    { id:'inventario', name:'Inventario', emoji:'📦', color:'#38bdf8' },
+    { id:'encargoCliente', name:'Encargo de cliente', emoji:'👤', color:'#a78bfa' },
+    { id:'esperandoGenerenTracking', name:'Esperando generen tracking', emoji:'🕒', color:'#fbbf24' },
+    { id:'recibidoEEUU', name:'Recibido en EEUU', emoji:'✅', color:'#76f7a6' },
+    { id:'pendienteSeguimiento', name:'Pendiente de seguimiento', emoji:'🔎', color:'#6ee7ff' },
+  ];
+}
+
+function slugify(s) {
+  return normalizeText(s).toLowerCase()
+    .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/(^-|-$)/g,'')
+    .slice(0, 40) || ('tag-' + Math.random().toString(36).slice(2,8));
+}
+
+function hexToRgba(hex, alpha=0.18) {
+  try {
+    let h = String(hex || '').trim();
+    if (!h) return `rgba(110,231,255,${alpha})`;
+    if (h[0] === '#') h = h.slice(1);
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const r = parseInt(h.slice(0,2),16);
+    const g = parseInt(h.slice(2,4),16);
+    const b = parseInt(h.slice(4,6),16);
+    if (![r,g,b].every(n => Number.isFinite(n))) return `rgba(110,231,255,${alpha})`;
+    return `rgba(${r},${g},${b},${alpha})`;
+  } catch {
+    return `rgba(110,231,255,${alpha})`;
+  }
+}
+
+function tagDefs() {
+  return Array.isArray(SETTINGS.tagDefs) && SETTINGS.tagDefs.length ? SETTINGS.tagDefs : defaultTagDefs();
+}
+
+function findTagDef(id) {
+  return tagDefs().find(t => t.id === id) || null;
+}
+
+function normalizeItemTags(it) {
+  if (!it) return it;
+  if (Array.isArray(it.tagIds)) return it;
+  const tagIds = [];
+  const legacy = it.tags;
+  if (legacy && typeof legacy === 'object') {
+    if (legacy.pesoRaro) tagIds.push('pesoRaro');
+    if (legacy.inventario) tagIds.push('inventario');
+    if (legacy.encargoCliente) tagIds.push('encargoCliente');
+    if (legacy.esperandoGenerenTracking) tagIds.push('esperandoGenerenTracking');
+    if (legacy.recibidoEEUU) tagIds.push('recibidoEEUU');
+    if (legacy.pendienteSeguimiento) tagIds.push('pendienteSeguimiento');
+  }
+  it.tagIds = tagIds;
+  return it;
+}
+
+function normalizeAllItems() {
+  (DATA.items || []).forEach(normalizeItemTags);
+}
+
+function getSelectedFilterTagIds() {
+  if (!tagFiltersWrap) return [];
+  return Array.from(tagFiltersWrap.querySelectorAll('input[data-tagfilter]'))
+    .filter(x => x.checked)
+    .map(x => x.dataset.tagfilter);
+}
+
+function getSelectedEditTagIds() {
+  if (!tagPickersWrap) return [];
+  return Array.from(tagPickersWrap.querySelectorAll('input[data-tagedit]'))
+    .filter(x => x.checked)
+    .map(x => x.dataset.tagedit);
+}
+
+function renderTagFiltersUI() {
+  if (!tagFiltersWrap) return;
+  const prev = new Set(getSelectedFilterTagIds());
+  tagFiltersWrap.innerHTML = tagDefs().map(t => {
+    const c = escapeHtml(t.color || '#38bdf8');
+    const id = escapeHtml(t.id);
+    const name = escapeHtml(t.name || t.id);
+    const em = escapeHtml(t.emoji || '🏷️');
+    const checked = prev.has(t.id) ? 'checked' : '';
+    return `<label class="chip" data-tagchip="1" style="--chipBorder:${c};"><input type="checkbox" data-tagfilter="${id}" ${checked}/> ${em} ${name}</label>`;
+  }).join('');
+}
+
+function renderTagPickersUI(selectedIds=[]) {
+  if (!tagPickersWrap) return;
+  const sel = new Set(selectedIds || []);
+  tagPickersWrap.innerHTML = tagDefs().map(t => {
+    const c = escapeHtml(t.color || '#38bdf8');
+    const id = escapeHtml(t.id);
+    const name = escapeHtml(t.name || t.id);
+    const em = escapeHtml(t.emoji || '🏷️');
+    const checked = sel.has(t.id) ? 'checked' : '';
+    return `<label class="chip" data-tagchip="1" style="--chipBorder:${c};"><input type="checkbox" data-tagedit="${id}" ${checked}/> ${em} ${name}</label>`;
+  }).join('');
+}
+
+function renderTagsManagerUI() {
+  if (!tagsManager) return;
+  const defs = tagDefs();
+  tagsManager.innerHTML = defs.map(t => {
+    const id = escapeHtml(t.id);
+    const name = escapeHtml(t.name || t.id);
+    const em = escapeHtml(t.emoji || '🏷️');
+    const color = escapeHtml(t.color || '#38bdf8');
+    return `
+      <div class="tagRow" data-id="${id}">
+        <input class="input" data-field="emoji" value="${em}" placeholder="🏷️" />
+        <input class="input" data-field="name" value="${name}" placeholder="Nombre" />
+        <input class="input colorInput" data-field="color" type="color" value="${color}" />
+        <button class="btn btnDanger btnTiny" type="button" data-action="deleteTag">Eliminar</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function readTagDefsFromManager() {
+  if (!tagsManager) return tagDefs();
+  const rows = Array.from(tagsManager.querySelectorAll('.tagRow'));
+  const out = [];
+  for (const r of rows) {
+    const id = r.dataset.id;
+    const emoji = normalizeText(r.querySelector('[data-field="emoji"]')?.value) || '🏷️';
+    const name = normalizeText(r.querySelector('[data-field="name"]')?.value) || id;
+    const color = normalizeText(r.querySelector('[data-field="color"]')?.value) || '#38bdf8';
+    out.push({ id, emoji, name, color });
+  }
+  return out;
+}
+
   function loadSettings() {
     try {
       const raw = lsGet(LS_SETTINGS);
@@ -180,7 +322,8 @@
         branch:'main',
         dataPath:'data/trackings.json',
         imageDir:'data/images',
-        token:''
+        token:'',
+        tagDefs: defaultTagDefs()
       };
       const obj = JSON.parse(raw);
       return {
@@ -189,7 +332,8 @@
         branch: obj.branch || 'main',
         dataPath: obj.dataPath || 'data/trackings.json',
         imageDir: obj.imageDir || 'data/images',
-        token: obj.token || ''
+        token: obj.token || '',
+        tagDefs: Array.isArray(obj.tagDefs) && obj.tagDefs.length ? obj.tagDefs : defaultTagDefs()
       };
     } catch {
       return {
@@ -198,7 +342,8 @@
         branch:'main',
         dataPath:'data/trackings.json',
         imageDir:'data/images',
-        token:''
+        token:'',
+        tagDefs: defaultTagDefs()
       };
     }
   }
@@ -539,11 +684,10 @@
 
   // ====== RENDER ======
   function getFilteredItems() {
+    normalizeAllItems();
     const q = normalizeText(searchInput.value).toLowerCase();
     const sf = statusFilter.value;
-    const mustPeso = tagPesoRaro.checked;
-    const mustInv = tagInventario.checked;
-    const mustEnc = tagEncargo.checked;
+    const mustTags = getSelectedFilterTagIds();
 
     const items = [...(DATA.items || [])];
 
@@ -599,13 +743,21 @@
     return `<span class="badge warn">⏳ ${escapeHtml(status || '—')}</span>`;
   }
 
-  function tagBadges(tags) {
-    const arr = [];
-    if (tags?.pesoRaro) arr.push(`<span class="badge bad">⚠️ Peso/volumen raro</span>`);
-    if (tags?.inventario) arr.push(`<span class="badge">📦 Inventario</span>`);
-    if (tags?.encargoCliente) arr.push(`<span class="badge">🧾 Encargo</span>`);
-    return arr.join(' ');
+  function tagBadges(tagIds) {
+  const arr = [];
+  const ids = Array.isArray(tagIds) ? tagIds : [];
+  for (const id of ids) {
+    const def = findTagDef(id);
+    if (!def) continue;
+    const bg = hexToRgba(def.color || '#38bdf8', 0.18);
+    const border = escapeHtml(def.color || '#38bdf8');
+    const em = escapeHtml(def.emoji || '🏷️');
+    const name = escapeHtml(def.name || def.id);
+    arr.push(`<span class="badge tagBadge" style="--tagBg:${bg}; --tagBorder:${border};">${em} ${name}</span>`);
   }
+  return arr.join(' ');
+}
+
 
   function compactTracking(it) {
     const a = normalizeText(it.trackings?.original);
@@ -644,7 +796,7 @@
       const qty = (it.qty === null || it.qty === undefined || it.qty === '') ? '—' : escapeHtml(String(it.qty));
       const tr = escapeHtml(compactTracking(it));
       const status = statusBadge(it.status);
-      const tags = tagBadges(it.tags);
+      const tags = tagBadges(it.tagIds);
       const updated = fmtDT(it.updatedAt);
       const created = fmtDT(it.createdAt);
 
@@ -724,7 +876,8 @@
       qty: null,
       trackings: { original:'', hn504:'', others:[] },
       status: 'Esperando tracking',
-      tags: { pesoRaro:false, inventario:false, encargoCliente:false },
+      tagIds: [],
+      tags: undefined,
       purchase: { total:'', currency:'USD', method:'' },
       notes: '',
       images: [],
@@ -741,9 +894,7 @@
     fTracking504.value = item.trackings?.hn504 || '';
     fStatus.value = item.status || 'Esperando tracking';
 
-    fTagPesoRaro.checked = !!item.tags?.pesoRaro;
-    fTagInventario.checked = !!item.tags?.inventario;
-    fTagEncargo.checked = !!item.tags?.encargoCliente;
+        renderTagPickersUI(item.tagIds || []);
 
     fTotal.value = item.purchase?.total || '';
     fCurrency.value = item.purchase?.currency || 'USD';
@@ -908,11 +1059,8 @@
     item.trackings.others = getOtherTrackingsFromUI();
     item.status = fStatus.value || 'Esperando tracking';
 
-    item.tags = {
-      pesoRaro: !!fTagPesoRaro.checked,
-      inventario: !!fTagInventario.checked,
-      encargoCliente: !!fTagEncargo.checked
-    };
+    item.tagIds = getSelectedEditTagIds();
+    item.tags = undefined;
 
     item.purchase = item.purchase || { total:'', currency:'USD', method:'' };
     item.purchase.total = normalizeText(fTotal.value);
@@ -992,13 +1140,17 @@
     return '📌';
   }
 
-  function tagsPretty(tags) {
-    const out = [];
-    if (tags?.inventario) out.push('📦 Inventario');
-    if (tags?.encargoCliente) out.push('👤 Encargo de cliente');
-    if (tags?.pesoRaro) out.push('⚠️ Peso/volumen raro');
-    return out;
+  function tagsPretty(tagIds) {
+  const out = [];
+  const ids = Array.isArray(tagIds) ? tagIds : [];
+  for (const id of ids) {
+    const def = findTagDef(id);
+    if (!def) continue;
+    out.push(`${def.emoji || '🏷️'} ${def.name || def.id}`);
   }
+  return out;
+}
+
 
   function trackingsPrettyLines(it) {
     const a = normalizeText(it.trackings?.original);
@@ -1037,7 +1189,7 @@
     if (total !== '—') lines.push(`💸 Total costo: ${total}`);
     if (pay !== '—') lines.push(`💳 Pago: ${pay}`);
 
-    const tagLines = tagsPretty(it.tags);
+    const tagLines = tagsPretty(it.tagIds);
     if (tagLines.length) {
       lines.push('');
       lines.push(...tagLines);
@@ -1156,14 +1308,45 @@
 
   
 // ====== MODALS ======
-  function showModal(backdropEl) {
-    backdropEl.classList.add('show');
-    backdropEl.setAttribute('aria-hidden','false');
-  }
-  function hideModal(backdropEl) {
-    backdropEl.classList.remove('show');
-    backdropEl.setAttribute('aria-hidden','true');
-  }
+let __scrollLockY = 0;
+let __scrollLocked = false;
+
+function lockBodyScroll() {
+  if (__scrollLocked) return;
+  __scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.classList.add('noScroll');
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${__scrollLockY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+  __scrollLocked = true;
+}
+
+function unlockBodyScrollIfNeeded() {
+  const open = document.querySelectorAll('.modalBackdrop.show').length;
+  if (open > 0) return;
+  if (!__scrollLocked) return;
+  document.body.classList.remove('noScroll');
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  window.scrollTo(0, __scrollLockY);
+  __scrollLocked = false;
+}
+
+function showModal(backdropEl) {
+  backdropEl.classList.add('show');
+  backdropEl.setAttribute('aria-hidden','false');
+  lockBodyScroll();
+}
+function hideModal(backdropEl) {
+  backdropEl.classList.remove('show');
+  backdropEl.setAttribute('aria-hidden','true');
+  unlockBodyScrollIfNeeded();
+}
 
   // ====== GALLERY ======
   function openGalleryForItem(id, startIndex=0) {
@@ -1219,6 +1402,9 @@
     ghDataPath.value = SETTINGS.dataPath || 'data/trackings.json';
     ghImageDir.value = SETTINGS.imageDir || 'data/images';
     ghToken.value = SETTINGS.token || '';
+    // tags
+    SETTINGS.tagDefs = tagDefs();
+    renderTagsManagerUI();
     settingsHint.textContent = '';
     showModal(settingsBackdrop);
   }
@@ -1262,7 +1448,8 @@
       branch: normalizeText(ghBranch.value) || 'main',
       dataPath: normalizeText(ghDataPath.value) || 'data/trackings.json',
       imageDir: normalizeText(ghImageDir.value) || 'data/images',
-      token: normalizeText(ghToken.value)
+      token: normalizeText(ghToken.value),
+      tagDefs: readTagDefsFromManager()
     });
     settingsHint.textContent = 'Guardado. Recargando...';
     await loadFromGitHubIfPossible();
@@ -1381,6 +1568,46 @@
   btnTestSettings.addEventListener('click', testSettings);
   btnForceSync.addEventListener('click', forceSync);
 
+
+// Tags manager actions
+if (tagsManager) {
+  tagsManager.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-action="deleteTag"]');
+    if (!b) return;
+    const row = e.target.closest('.tagRow');
+    if (row) row.remove();
+  });
+}
+if (btnAddTag) {
+  btnAddTag.addEventListener('click', () => {
+    const name = normalizeText(newTagName?.value);
+    if (!name) return toast('Escribe el nombre de la etiqueta', 'warn');
+    const emoji = normalizeText(newTagEmoji?.value) || '🏷️';
+    const color = normalizeText(newTagColor?.value) || '#38bdf8';
+    const keyRaw = normalizeText(newTagKey?.value);
+    let id = slugify(keyRaw || name);
+    const existing = new Set(Array.from(tagsManager?.querySelectorAll('.tagRow') || []).map(r => r.dataset.id));
+    let base = id, k = 2;
+    while (existing.has(id)) { id = `${base}-${k++}`; }
+    // append row
+    if (tagsManager) {
+      const div = document.createElement('div');
+      div.className = 'tagRow';
+      div.dataset.id = id;
+      div.innerHTML = `
+        <input class="input" data-field="emoji" value="${escapeHtml(emoji)}" placeholder="🏷️" />
+        <input class="input" data-field="name" value="${escapeHtml(name)}" placeholder="Nombre" />
+        <input class="input colorInput" data-field="color" type="color" value="${escapeHtml(color)}" />
+        <button class="btn btnDanger btnTiny" type="button" data-action="deleteTag">Eliminar</button>
+      `;
+      tagsManager.appendChild(div);
+    }
+    if (newTagName) newTagName.value = '';
+    if (newTagKey) newTagKey.value = '';
+    if (newTagEmoji) newTagEmoji.value = '';
+    toast('Etiqueta agregada (recuerda Guardar Config)', 'good');
+  });
+}
   btnAdd.addEventListener('click', () => openEdit(null));
   btnPull && btnPull.addEventListener('click', manualPull);
   btnPush && btnPush.addEventListener('click', manualPush);
@@ -1444,10 +1671,14 @@
   wireDropZone(imageGrid);
 
   // Filters
-  [searchInput, statusFilter, tagPesoRaro, tagInventario, tagEncargo].forEach(el => {
+  [searchInput, statusFilter].forEach(el => {
     el.addEventListener('input', renderAll);
     el.addEventListener('change', renderAll);
   });
+  if (tagFiltersWrap) {
+    tagFiltersWrap.addEventListener('change', renderAll);
+    tagFiltersWrap.addEventListener('input', renderAll);
+  }
 
   // List actions (delegation)
   list.addEventListener('click', (e) => {
@@ -1534,6 +1765,7 @@
 
     // Then try GitHub
     await loadFromGitHubIfPossible();
+    renderTagFiltersUI();
     startPolling();
     renderAll();
   }

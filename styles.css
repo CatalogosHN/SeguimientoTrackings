@@ -20,7 +20,15 @@
 }
 
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{
+  overscroll-behavior: none;
+}
+
+body.noScroll{
+  overflow:hidden;
+}
+
+body{height:100%}
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
@@ -262,6 +270,7 @@ a{color:inherit}
 .modalBackdrop{
   position:fixed; inset:0;
   background: rgba(0,0,0,.62);
+  overscroll-behavior: contain;
   display:none;
   align-items:center;
   justify-content:center;
@@ -296,7 +305,8 @@ a{color:inherit}
   z-index:2;
 }
 .modalTitle{font-weight:900; letter-spacing:.2px; min-width:0}
-.modalBody{padding:14px; overflow:auto; -webkit-overflow-scrolling: touch;}
+.modalBody{padding:14px; overflow:auto; -webkit-overflow-scrolling: touch;  overscroll-behavior: contain;
+}
 
 .metaBox{
   width: 260px;
@@ -333,6 +343,60 @@ a{color:inherit}
   color:#fff;
   border-radius: 10px;
   padding:2px 8px;
+}
+
+/* Tag colors (custom) */
+.tagBadge{
+  border-color: var(--tagBorder, var(--border));
+  background: var(--tagBg, rgba(110,231,255,.10));
+}
+.chip{
+  border-color: var(--chipBorder, var(--border));
+}
+.chip[data-tagchip="1"]{
+  border-color: var(--chipBorder, var(--border));
+}
+
+/* Tags manager in settings */
+.sectionBox{
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  background: rgba(0,0,0,.12);
+}
+.sectionTitle{
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.tagsManager{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top: 10px;
+}
+.tagRow{
+  display:grid;
+  grid-template-columns: 78px 1fr 78px 90px;
+  gap:8px;
+  align-items:center;
+}
+.tagRow .btnTiny{
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.colorInput{
+  height: 42px;
+  padding: 0 6px;
+}
+@media (max-width: 640px){
+  .tagRow{
+    grid-template-columns: 1fr 1fr;
+  }
+  .tagRow .btnTiny{
+    grid-column: 1 / -1;
+  }
 }
 
 /* Gallery */
