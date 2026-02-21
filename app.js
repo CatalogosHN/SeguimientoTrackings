@@ -683,19 +683,25 @@ function readTagDefsFromManager() {
   }
 
   // ====== RENDER ======
+  
   function getFilteredItems() {
     normalizeAllItems();
     const q = normalizeText(searchInput.value).toLowerCase();
     const sf = statusFilter.value;
-    const mustTags = getSelectedFilterTagIds();
+    const mustTags = getSelectedFilterTagIds(); // tag ids selected in filter chips (AND)
 
     const items = [...(DATA.items || [])];
 
     const out = items.filter(it => {
       if (sf !== '__all__' && it.status !== sf) return false;
-      if (mustPeso && !(it.tags && it.tags.pesoRaro)) return false;
-      if (mustInv && !(it.tags && it.tags.inventario)) return false;
-      if (mustEnc && !(it.tags && it.tags.encargoCliente)) return false;
+
+      // Tag filters (AND): item must include all selected tag ids
+      if (mustTags && mustTags.length) {
+        const ids = Array.isArray(it.tagIds) ? it.tagIds : [];
+        for (const t of mustTags) {
+          if (!ids.includes(t)) return false;
+        }
+      }
 
       if (q) {
         const blob = [
@@ -708,6 +714,7 @@ function readTagDefsFromManager() {
         ].join(' ').toLowerCase();
         if (!blob.includes(q)) return false;
       }
+
       return true;
     });
 
