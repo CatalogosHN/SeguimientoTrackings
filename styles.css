@@ -264,6 +264,10 @@ a{color:inherit}
   padding:10px 12px;
   border-radius: var(--radius2);
   color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 24vh;
+  overflow:auto;
 }
 
 /* Modals */
@@ -505,46 +509,3 @@ a{color:inherit}
   background: rgba(0,0,0,.12);
 }
 .dropZone:focus{outline:none; border-color: rgba(110,231,255,.55); box-shadow: 0 0 0 3px rgba(110,231,255,.12)}
-
-
-/* Color picker button + field */
-.colorField{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-.colorBtn{
-  width:56px;
-  height:42px;
-  border-radius: 14px;
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.08);
-  cursor:pointer;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.06);
-}
-.colorBtn:active{transform: translateY(1px);}
-
-.errorBox{
-  margin-top:10px;
-  border:1px solid rgba(255,122,122,.35);
-  background: rgba(255,122,122,.10);
-  color: #ffd2d2;
-  border-radius: var(--radius2);
-  padding:10px 12px;
-  font-size:12px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 120px;
-  overflow:auto;
-}
-
-@media (max-width: 560px){
-  .modal{ max-height: calc(100dvh - 22px); }
-  .modalBackdrop{ padding:10px; }
-  .colorBtn{ width:64px; }
-  .metaBox{ width: 100%; }
-  .imageGrid{ grid-template-columns: repeat(3, 1fr); }
-}
-
-/* Ensure background cannot scroll behind modals */
-html.noScroll, body.noScroll{ overflow:hidden; height:100%; }

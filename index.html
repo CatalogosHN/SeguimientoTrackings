@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Trackings USA • Dashboard</title>
   <meta name="description" content="Organización de trackings de paquetes (USA) con sincronización vía GitHub." />
-  <link rel="stylesheet" href="styles.css" />
-  <!-- Color picker (paleta) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css" />
+  <link rel="stylesheet" href="styles.css?v=9" />
 </head>
 <body>
   <header class="topbar">
@@ -162,11 +160,7 @@
           </div>
           <div>
             <label class="label">Color de fondo</label>
-            <div class="colorField">
-              <button class="colorBtn" id="newTagColorBtn" type="button" aria-label="Elegir color"></button>
-              <input class="input" id="newTagColor" value="#2d6cdf" placeholder="#2d6cdf" />
-            </div>
-            <div class="muted small">Toca el cuadrito 🎨 o escribe HEX.</div>
+            <input class="input" id="newTagColor" type="color" value="#2d6cdf" />
           </div>
         </div>
 
@@ -183,7 +177,7 @@
         </div>
 
         <div class="hint muted" id="settingsHint"></div>
-        <div class="errorBox" id="settingsError" style="display:none"></div>
+        <div class="error" id="settingsError" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -319,7 +313,6 @@
     </div>
   </div>
 
-  <script defer src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
-  <script defer src="app.js"></script>
+  <script defer src="app.js?v=9"></script>
 </body>
 </html>
