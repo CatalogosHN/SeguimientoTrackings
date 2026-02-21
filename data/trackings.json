@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-21T10:05:26.786Z",
+  "updatedAt": "2026-02-21T11:00:35.454Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -13,7 +13,8 @@
       },
       "status": "Esperando tracking",
       "tagIds": [
-        "recibidoEEUU"
+        "recibidoEEUU",
+        "caca-seca"
       ],
       "purchase": {
         "total": "",
@@ -28,7 +29,7 @@
         }
       ],
       "createdAt": "2026-02-21T09:39:51.791Z",
-      "updatedAt": "2026-02-21T09:39:51.791Z"
+      "updatedAt": "2026-02-21T10:22:14.256Z"
     },
     {
       "id": "1771664704496-zc3qrixm",
@@ -213,6 +214,50 @@
       "tagIds": [
         "inventario"
       ]
+    }
+  ],
+  "tagDefs": [
+    {
+      "id": "pesoRaro",
+      "name": "Peso/volumen raro",
+      "emoji": "⚠️",
+      "color": "#ff7a7a"
+    },
+    {
+      "id": "inventario",
+      "name": "Inventario",
+      "emoji": "📦",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "encargoCliente",
+      "name": "Encargo de cliente",
+      "emoji": "👤",
+      "color": "#a78bfa"
+    },
+    {
+      "id": "esperandoGenerenTracking",
+      "name": "Esperando generen tracking",
+      "emoji": "🕒",
+      "color": "#fbbf24"
+    },
+    {
+      "id": "recibidoEEUU",
+      "name": "Recibido en EEUU",
+      "emoji": "✅",
+      "color": "#76f7a6"
+    },
+    {
+      "id": "pendienteSeguimiento",
+      "name": "Pendiente de seguimiento",
+      "emoji": "🔎",
+      "color": "#6ee7ff"
+    },
+    {
+      "id": "caca-seca",
+      "name": "caca aguada rica",
+      "emoji": "💩",
+      "color": "#9b6212"
     }
   ]
 }
