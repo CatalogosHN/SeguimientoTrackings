@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:43:32.823Z",
+  "updatedAt": "2026-02-22T00:44:22.315Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -266,15 +266,15 @@
     },
     {
       "id": "hacker-v",
-      "name": "Hacker",
-      "emoji": "🧑🏻‍💻",
-      "color": "#00cc0a"
+      "name": "hacker-v",
+      "emoji": "🏷️",
+      "color": "#64748b"
     },
     {
       "id": "puta-h",
-      "name": "Puta",
-      "emoji": "✅️",
-      "color": "#0000eb"
+      "name": "puta-h",
+      "emoji": "🏷️",
+      "color": "#64748b"
     }
   ]
 }
