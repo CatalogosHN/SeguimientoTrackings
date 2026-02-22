@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T10:38:52.404Z",
+  "updatedAt": "2026-02-22T10:39:13.304Z",
   "items": [
     {
       "id": "1771756674393-mzjgobkv",
@@ -42,6 +42,7 @@
       },
       "status": "Pendiente de seguimiento",
       "tagIds": [
+        "encargoCliente",
         "pendienteSeguimiento"
       ],
       "purchase": {
@@ -57,7 +58,7 @@
         }
       ],
       "createdAt": "2026-02-22T10:31:07.244Z",
-      "updatedAt": "2026-02-22T10:31:07.244Z"
+      "updatedAt": "2026-02-22T10:39:13.304Z"
     },
     {
       "id": "1771666774771-86x0h8ha",
