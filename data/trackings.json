@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:45:51.212Z",
+  "updatedAt": "2026-02-22T00:12:34.361Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -106,14 +106,12 @@
         }
       ],
       "createdAt": "2026-02-21T07:59:52.338Z",
-      "updatedAt": "2026-02-22T00:43:20.704Z",
+      "updatedAt": "2026-02-21T23:20:05.219Z",
       "tagIds": [
         "pesoRaro",
         "inventario",
         "encargoCliente",
-        "carteras-1",
-        "hacker-v",
-        "puta-h"
+        "carteras-1"
       ]
     },
     {
@@ -172,12 +170,11 @@
         }
       ],
       "createdAt": "2026-02-21T07:25:15.605Z",
-      "updatedAt": "2026-02-22T00:41:30.525Z",
+      "updatedAt": "2026-02-21T23:20:17.975Z",
       "tagIds": [
         "inventario",
         "encargoCliente",
-        "carteras-1",
-        "hacker-v"
+        "carteras-1"
       ]
     },
     {
@@ -251,6 +248,12 @@
       "name": "Pendiente de seguimiento",
       "emoji": "🔎",
       "color": "#6ee7ff"
+    },
+    {
+      "id": "caca-seca",
+      "name": "caca aguada rica",
+      "emoji": "💩",
+      "color": "#9b6212"
     }
   ]
 }

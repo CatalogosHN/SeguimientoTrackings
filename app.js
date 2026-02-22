@@ -57,6 +57,7 @@
 
   const settingsBackdrop = $('settingsBackdrop');
   const btnOpenSettings = $('btnOpenSettings');
+  const btnHardReload = $('btnHardReload');
   const btnCloseSettings = $('btnCloseSettings');
   const btnSaveSettings = $('btnSaveSettings');
   const btnTestSettings = $('btnTestSettings');
@@ -381,6 +382,18 @@ function normalizeItemTags(it) {
 
 function normalizeAllItems() {
   (DATA.items || []).forEach(normalizeItemTags);
+}
+
+function removeTagIdFromAllItems(tagId) {
+  if (!tagId) return;
+  // Remove the tag from all items so it won't be re-created as a placeholder on other devices.
+  (DATA.items || []).forEach(it => {
+    if (Array.isArray(it.tagIds)) it.tagIds = it.tagIds.filter(t => t !== tagId);
+    // legacy field support
+    if (Array.isArray(it.tags)) it.tags = it.tags.filter(t => (t && t.id ? t.id : t) !== tagId);
+  });
+  DATA.updatedAt = nowIso();
+  saveLocalData();
 }
 
 function getSelectedFilterTagIds() {
@@ -1773,6 +1786,11 @@ function hideModal(backdropEl) {
   btnLogout.addEventListener('click', logout);
 
   btnOpenSettings.addEventListener('click', openSettings);
+  if (btnHardReload) btnHardReload.addEventListener('click', () => {
+    const u = new URL(location.href);
+    u.searchParams.set('r', String(Date.now()));
+    location.href = u.toString();
+  });
   btnCloseSettings.addEventListener('click', closeSettings);
   settingsBackdrop.addEventListener('click', (e) => {
     if (e.target === settingsBackdrop) closeSettings();
@@ -1788,8 +1806,24 @@ if (tagsManager) {
     const b = e.target.closest('[data-action="deleteTag"]');
     if (!b) return;
     const row = e.target.closest('.tagRow');
+    const id = row ? row.dataset.id : '';
+    if (!id) return;
+
+    const ok = confirm('¿Eliminar esta etiqueta? Se quitará también de TODOS los registros.');
+    if (!ok) return;
+
+    // Remove from all items so it won't re-appear as placeholder on other devices
+    removeTagIdFromAllItems(id);
+
+    // Remove row from UI
     if (row) row.remove();
+
+    // Re-render tag filters/pickers to drop the deleted id
+    try { renderTagFiltersUI(); } catch {}
+    try { renderTagPickersUI(getSelectedEditTagIds().filter(t => t !== id)); } catch {}
+
     scheduleTagDefsAutosave();
+    renderAll();
     toast('Etiqueta eliminada', 'good');
   });
 

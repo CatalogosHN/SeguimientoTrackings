@@ -531,3 +531,7 @@ html, body { overscroll-behavior: none; }
   align-items:center;
   justify-content:center;
 }
+
+
+/* Compact icon buttons in header */
+.topbarActions .iconBtn{display:inline-flex;align-items:center;justify-content:center;min-width:44px;}
