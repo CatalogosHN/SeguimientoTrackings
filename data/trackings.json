@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:44:36.509Z",
+  "updatedAt": "2026-02-22T00:45:01.962Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -257,24 +257,6 @@
       "name": "caca aguada rica",
       "emoji": "💩",
       "color": "#9b6212"
-    },
-    {
-      "id": "carteras-1",
-      "name": "carteras-1",
-      "emoji": "🏷️",
-      "color": "#64748b"
-    },
-    {
-      "id": "hacker-v",
-      "name": "hacker-v",
-      "emoji": "🏷️",
-      "color": "#64748b"
-    },
-    {
-      "id": "puta-h",
-      "name": "puta-h",
-      "emoji": "🏷️",
-      "color": "#64748b"
     }
   ]
 }
