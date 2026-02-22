@@ -1,7 +1,35 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T10:28:49.852Z",
+  "updatedAt": "2026-02-22T10:31:08.428Z",
   "items": [
+    {
+      "id": "1771756134059-ij4tbvnj",
+      "title": "Extensiones de pelo",
+      "qty": 2,
+      "trackings": {
+        "original": "SPXMIA056791208242",
+        "hn504": "",
+        "others": []
+      },
+      "status": "Pendiente de seguimiento",
+      "tagIds": [
+        "pendienteSeguimiento"
+      ],
+      "purchase": {
+        "total": "16.43",
+        "currency": "USD",
+        "method": ""
+      },
+      "notes": "GSU16U61T001BEK shein",
+      "images": [
+        {
+          "path": "data/images/1771756134059-ij4tbvnj/1771756267245_1.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771756134059-ij4tbvnj/1771756267245_1.jpg"
+        }
+      ],
+      "createdAt": "2026-02-22T10:31:07.244Z",
+      "updatedAt": "2026-02-22T10:31:07.244Z"
+    },
     {
       "id": "1771666774771-86x0h8ha",
       "title": "Jajajaja",
