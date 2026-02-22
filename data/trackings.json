@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:41:12.347Z",
+  "updatedAt": "2026-02-22T00:41:30.525Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -170,11 +170,12 @@
         }
       ],
       "createdAt": "2026-02-21T07:25:15.605Z",
-      "updatedAt": "2026-02-21T23:20:17.975Z",
+      "updatedAt": "2026-02-22T00:41:30.525Z",
       "tagIds": [
         "inventario",
         "encargoCliente",
-        "carteras-1"
+        "carteras-1",
+        "hacker-v"
       ]
     },
     {
