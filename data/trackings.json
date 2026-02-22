@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:12:34.361Z",
+  "updatedAt": "2026-02-22T00:41:10.784Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -254,6 +254,18 @@
       "name": "caca aguada rica",
       "emoji": "💩",
       "color": "#9b6212"
+    },
+    {
+      "id": "carteras-1",
+      "name": "carteras-1",
+      "emoji": "🏷️",
+      "color": "#64748b"
+    },
+    {
+      "id": "hacker-v",
+      "name": "Hacker",
+      "emoji": "🧑🏻‍💻",
+      "color": "#00cc0a"
     }
   ]
 }
