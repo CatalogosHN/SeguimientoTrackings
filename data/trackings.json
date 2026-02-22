@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:45:27.928Z",
+  "updatedAt": "2026-02-22T00:45:30.587Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -261,6 +261,18 @@
     {
       "id": "caca-seca",
       "name": "caca-seca",
+      "emoji": "🏷️",
+      "color": "#64748b"
+    },
+    {
+      "id": "hacker-v",
+      "name": "hacker-v",
+      "emoji": "🏷️",
+      "color": "#64748b"
+    },
+    {
+      "id": "puta-h",
+      "name": "puta-h",
       "emoji": "🏷️",
       "color": "#64748b"
     }
