@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T10:40:15.564Z",
+  "updatedAt": "2026-02-22T10:40:20.186Z",
   "items": [
     {
       "id": "1771756674393-mzjgobkv",
@@ -59,34 +59,6 @@
       ],
       "createdAt": "2026-02-22T10:31:07.244Z",
       "updatedAt": "2026-02-22T10:39:13.304Z"
-    },
-    {
-      "id": "1771666774771-86x0h8ha",
-      "title": "Jajajaja",
-      "qty": null,
-      "trackings": {
-        "original": "",
-        "hn504": "",
-        "others": []
-      },
-      "status": "Esperando tracking",
-      "tagIds": [
-        "recibidoEEUU"
-      ],
-      "purchase": {
-        "total": "",
-        "currency": "USD",
-        "method": ""
-      },
-      "notes": "",
-      "images": [
-        {
-          "path": "data/images/1771666774771-86x0h8ha/1771666791791_1.jpg",
-          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771666774771-86x0h8ha/1771666791791_1.jpg"
-        }
-      ],
-      "createdAt": "2026-02-21T09:39:51.791Z",
-      "updatedAt": "2026-02-21T23:19:51.136Z"
     }
   ],
   "tagDefs": [
