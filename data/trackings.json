@@ -1,7 +1,36 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T10:31:08.428Z",
+  "updatedAt": "2026-02-22T10:38:52.404Z",
   "items": [
+    {
+      "id": "1771756674393-mzjgobkv",
+      "title": "Calzones",
+      "qty": 2,
+      "trackings": {
+        "original": "SPXMIA056791208242",
+        "hn504": "",
+        "others": []
+      },
+      "status": "Esperando tracking",
+      "tagIds": [
+        "encargoCliente",
+        "pendienteSeguimiento"
+      ],
+      "purchase": {
+        "total": "9.43",
+        "currency": "USD",
+        "method": ""
+      },
+      "notes": "GSU16U61T001BEF",
+      "images": [
+        {
+          "path": "data/images/1771756674393-mzjgobkv/1771756731197_1.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1771756674393-mzjgobkv/1771756731197_1.jpg"
+        }
+      ],
+      "createdAt": "2026-02-22T10:38:51.197Z",
+      "updatedAt": "2026-02-22T10:38:51.197Z"
+    },
     {
       "id": "1771756134059-ij4tbvnj",
       "title": "Extensiones de pelo",
