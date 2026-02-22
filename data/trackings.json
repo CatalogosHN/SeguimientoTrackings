@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:45:33.473Z",
+  "updatedAt": "2026-02-22T00:45:40.910Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -251,30 +251,6 @@
       "name": "Pendiente de seguimiento",
       "emoji": "🔎",
       "color": "#6ee7ff"
-    },
-    {
-      "id": "carteras-1",
-      "name": "carteras-1",
-      "emoji": "🏷️",
-      "color": "#64748b"
-    },
-    {
-      "id": "caca-seca",
-      "name": "caca-seca",
-      "emoji": "🏷️",
-      "color": "#64748b"
-    },
-    {
-      "id": "hacker-v",
-      "name": "hacker-v",
-      "emoji": "🏷️",
-      "color": "#64748b"
-    },
-    {
-      "id": "puta-h",
-      "name": "puta-h",
-      "emoji": "🏷️",
-      "color": "#64748b"
     }
   ]
 }
