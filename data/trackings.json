@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T00:12:34.361Z",
+  "updatedAt": "2026-02-22T00:58:56.956Z",
   "items": [
     {
       "id": "1771666774771-86x0h8ha",
@@ -13,8 +13,7 @@
       },
       "status": "Esperando tracking",
       "tagIds": [
-        "recibidoEEUU",
-        "carteras-1"
+        "recibidoEEUU"
       ],
       "purchase": {
         "total": "",
@@ -110,8 +109,7 @@
       "tagIds": [
         "pesoRaro",
         "inventario",
-        "encargoCliente",
-        "carteras-1"
+        "encargoCliente"
       ]
     },
     {
@@ -173,8 +171,7 @@
       "updatedAt": "2026-02-21T23:20:17.975Z",
       "tagIds": [
         "inventario",
-        "encargoCliente",
-        "carteras-1"
+        "encargoCliente"
       ]
     },
     {
