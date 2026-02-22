@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T10:42:25.396Z",
+  "updatedAt": "2026-02-22T10:42:27.685Z",
   "items": [
     {
       "id": "1771756674393-mzjgobkv",
@@ -101,7 +101,7 @@
     {
       "id": "caca-seca",
       "name": "Retraso en Llegada",
-      "emoji": "⌛⏳",
+      "emoji": "⏳",
       "color": "#9b6212"
     }
   ]
