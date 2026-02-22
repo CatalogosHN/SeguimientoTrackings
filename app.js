@@ -287,6 +287,10 @@ function normalizeTagDefsArray(input) {
 function ensureDataHasTagDefs(data) {
   if (!data) return;
   if (!data.items) data.items = [];
+
+  // Normalize items first so we can reliably scan tagIds
+  data.items.forEach(normalizeItemTags);
+
   const merged = normalizeTagDefsArray(data.tagDefs) || [];
   const fromSettings = normalizeTagDefsArray(SETTINGS.tagDefs) || [];
   const defs = (merged.length ? merged : (fromSettings.length ? fromSettings : defaultTagDefs()));
@@ -296,7 +300,7 @@ function ensureDataHasTagDefs(data) {
 
   // Add placeholders for any unknown tag IDs used by items.
   data.items.forEach(it => {
-    (it.tags || []).forEach(id => {
+    (it.tagIds || []).forEach(id => {
       if (!id) return;
       if (!byId.has(id)) {
         const ph = { id, name: id, emoji: '🏷️', color: '#64748b' };
@@ -344,18 +348,34 @@ function findTagDef(id) {
 
 function normalizeItemTags(it) {
   if (!it) return it;
-  if (Array.isArray(it.tagIds)) return it;
-  const tagIds = [];
-  const legacy = it.tags;
-  if (legacy && typeof legacy === 'object') {
-    if (legacy.pesoRaro) tagIds.push('pesoRaro');
-    if (legacy.inventario) tagIds.push('inventario');
-    if (legacy.encargoCliente) tagIds.push('encargoCliente');
-    if (legacy.esperandoGenerenTracking) tagIds.push('esperandoGenerenTracking');
-    if (legacy.recibidoEEUU) tagIds.push('recibidoEEUU');
-    if (legacy.pendienteSeguimiento) tagIds.push('pendienteSeguimiento');
+
+  // Canonical field: tagIds (array of string IDs)
+  if (Array.isArray(it.tagIds)) {
+    it.tagIds = it.tagIds.map(x => String(x || '').trim()).filter(Boolean);
+    return it;
   }
-  it.tagIds = tagIds;
+
+  const out = [];
+  const legacy = it.tags;
+
+  // Legacy v0/v1: tags as array of ids
+  if (Array.isArray(legacy)) {
+    legacy.forEach(x => {
+      const s = String(x || '').trim();
+      if (s) out.push(s);
+    });
+  }
+  // Legacy: tags as object of booleans
+  else if (legacy && typeof legacy === 'object') {
+    if (legacy.pesoRaro) out.push('pesoRaro');
+    if (legacy.inventario) out.push('inventario');
+    if (legacy.encargoCliente) out.push('encargoCliente');
+    if (legacy.esperandoGenerenTracking) out.push('esperandoGenerenTracking');
+    if (legacy.recibidoEEUU) out.push('recibidoEEUU');
+    if (legacy.pendienteSeguimiento) out.push('pendienteSeguimiento');
+  }
+
+  it.tagIds = out;
   return it;
 }
 
@@ -434,6 +454,44 @@ function readTagDefsFromManager() {
     out.push({ id, emoji, name, color });
   }
   return out;
+}
+
+// ====== TAGS AUTO-SYNC ======
+// To avoid future issues, tag definitions are stored inside data/trackings.json (field: tagDefs).
+// When you add/edit/delete a tag, we auto-sync (debounced) if a token is configured.
+let TAGDEF_AUTOSAVE_TIMER = null;
+
+async function syncTagDefsToSharedJson({silent=true}={}) {
+  // Read latest definitions from UI (if open), otherwise from SETTINGS
+  const defs = (typeof readTagDefsFromManager === 'function')
+    ? (normalizeTagDefsArray(readTagDefsFromManager()) || defaultTagDefs())
+    : (normalizeTagDefsArray(SETTINGS.tagDefs) || defaultTagDefs());
+
+  saveSettings({ tagDefs: defs });
+  // Ensure DATA has tagDefs and placeholders
+  DATA.tagDefs = defs;
+  ensureDataHasTagDefs(DATA);
+
+  if (!ghWritable()) {
+    if (!silent) toast('Etiquetas guardadas local (sin token)', 'warn');
+    return;
+  }
+  // Persist to GitHub by saving the JSON (includes DATA.tagDefs)
+  await saveToGitHubIfPossible({ silent: true });
+  if (!silent) toast('Etiquetas sincronizadas', 'good');
+}
+
+function scheduleTagDefsAutosave() {
+  // Always keep local settings up to date
+  try { saveSettings({ tagDefs: normalizeTagDefsArray(readTagDefsFromManager()) || defaultTagDefs() }); } catch {}
+  if (!ghWritable()) return; // no token -> cannot sync
+  if (TAGDEF_AUTOSAVE_TIMER) clearTimeout(TAGDEF_AUTOSAVE_TIMER);
+  TAGDEF_AUTOSAVE_TIMER = setTimeout(() => {
+    syncTagDefsToSharedJson({silent:true}).catch(e => {
+      console.error(e);
+      renderSyncStatus('error', (e && e.message) ? e.message : 'Error');
+    });
+  }, 1200);
 }
 
   function loadSettings() {
@@ -1731,7 +1789,13 @@ if (tagsManager) {
     if (!b) return;
     const row = e.target.closest('.tagRow');
     if (row) row.remove();
+    scheduleTagDefsAutosave();
+    toast('Etiqueta eliminada', 'good');
   });
+
+  // Auto-sync tag edits (name/emoji/color) after user stops typing.
+  tagsManager.addEventListener('input', () => scheduleTagDefsAutosave());
+  tagsManager.addEventListener('change', () => scheduleTagDefsAutosave());
 }
 if (btnAddTag) {
   btnAddTag.addEventListener('click', () => {
@@ -1760,7 +1824,8 @@ if (btnAddTag) {
     if (newTagName) newTagName.value = '';
     if (newTagKey) newTagKey.value = '';
     if (newTagEmoji) newTagEmoji.value = '';
-    toast('Etiqueta agregada (recuerda Guardar Config)', 'good');
+    scheduleTagDefsAutosave();
+    toast(ghWritable() ? 'Etiqueta agregada ✅ (se sincroniza sola)' : 'Etiqueta agregada (local, sin token)', 'good');
   });
 }
   btnAdd.addEventListener('click', () => openEdit(null));
