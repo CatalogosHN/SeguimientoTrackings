@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-24T05:52:20.952Z",
+  "updatedAt": "2026-02-24T05:52:40.684Z",
   "items": [
     {
       "id": "1771756674393-mzjgobkv",
@@ -82,7 +82,7 @@
     },
     {
       "id": "esperandoGenerenTracking",
-      "name": "Esperando generen tracking",
+      "name": "Sin Tracking",
       "emoji": "🕒",
       "color": "#fbbf24"
     },
