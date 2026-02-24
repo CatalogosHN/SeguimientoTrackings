@@ -932,17 +932,17 @@ function scheduleTagDefsAutosave() {
 
   function renderStats() {
     const items = DATA.items || [];
-    const c1 = items.filter(x => x.status === 'Esperando tracking').length;
-    const c2 = items.filter(x => x.status === 'Pendiente de seguimiento').length;
+    const c1 = items.filter(x => x.status === 'En camino').length;
+    const c2 = items.filter(x => x.status === 'Perdido/Disputa/Proceso').length;
     const c3 = items.filter(x => x.status === 'Recibido en Estados Unidos').length;
 
     stats.innerHTML = `
       <div class="statCard">
-        <div class="statLabel">Esperando tracking</div>
+        <div class="statLabel">En camino</div>
         <div class="statValue">${c1}</div>
       </div>
       <div class="statCard">
-        <div class="statLabel">Pendiente de seguimiento</div>
+        <div class="statLabel">Perdido/Disputa/Proceso</div>
         <div class="statValue">${c2}</div>
       </div>
       <div class="statCard">
@@ -954,7 +954,7 @@ function scheduleTagDefsAutosave() {
 
   function statusBadge(status) {
     if (status === 'Recibido en Estados Unidos') return `<span class="badge good">✅ ${escapeHtml(status)}</span>`;
-    if (status === 'Pendiente de seguimiento') return `<span class="badge info">🕵️ ${escapeHtml(status)}</span>`;
+    if (status === 'Perdido/Disputa/Proceso') return `<span class="badge info">🕵️ ${escapeHtml(status)}</span>`;
     return `<span class="badge warn">⏳ ${escapeHtml(status || '—')}</span>`;
   }
 
