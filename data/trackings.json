@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-22T10:42:51.002Z",
+  "updatedAt": "2026-02-24T05:51:47.568Z",
   "items": [
     {
       "id": "1771756674393-mzjgobkv",
@@ -94,7 +94,7 @@
     },
     {
       "id": "pendienteSeguimiento",
-      "name": "Pendiente de Llegada",
+      "name": "En camino",
       "emoji": "🔎",
       "color": "#6ee7ff"
     },
