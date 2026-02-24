@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-24T06:07:45.609Z",
+  "updatedAt": "2026-02-24T06:08:00.853Z",
   "items": [
     {
       "id": "1771756674393-mzjgobkv",
@@ -40,7 +40,7 @@
         "hn504": "",
         "others": []
       },
-      "status": "Pendiente de seguimiento",
+      "status": "En camino",
       "tagIds": [
         "encargoCliente",
         "pendienteSeguimiento"
@@ -58,7 +58,7 @@
         }
       ],
       "createdAt": "2026-02-22T10:31:07.244Z",
-      "updatedAt": "2026-02-22T10:40:59.342Z"
+      "updatedAt": "2026-02-24T06:08:00.853Z"
     }
   ],
   "tagDefs": [
