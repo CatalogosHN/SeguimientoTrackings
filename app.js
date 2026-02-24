@@ -1090,7 +1090,7 @@ function scheduleTagDefsAutosave() {
       title: '',
       qty: null,
       trackings: { original:'', hn504:'', others:[] },
-      status: 'Esperando tracking',
+      status: 'En camino',
       tagIds: [],
       tags: undefined,
       purchase: { total:'', currency:'USD', method:'' },
@@ -1107,7 +1107,7 @@ function scheduleTagDefsAutosave() {
     fQty.value = (item.qty === null || item.qty === undefined) ? '' : String(item.qty);
     fTrackingOriginal.value = item.trackings?.original || '';
     fTracking504.value = item.trackings?.hn504 || '';
-    fStatus.value = item.status || 'Esperando tracking';
+    fStatus.value = item.status || 'En camino';
 
         renderTagPickersUI(item.tagIds || []);
 
@@ -1272,7 +1272,7 @@ function scheduleTagDefsAutosave() {
     item.trackings.original = normalizeText(fTrackingOriginal.value);
     item.trackings.hn504 = normalizeText(fTracking504.value);
     item.trackings.others = getOtherTrackingsFromUI();
-    item.status = fStatus.value || 'Esperando tracking';
+    item.status = fStatus.value || 'En camino';
 
     item.tagIds = getSelectedEditTagIds();
     item.tags = undefined;
