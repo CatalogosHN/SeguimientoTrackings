@@ -1,7 +1,39 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-01T05:59:45.657Z",
+  "updatedAt": "2026-03-01T22:16:01.713Z",
   "items": [
+    {
+      "id": "1772403266419-fa7se8ky",
+      "title": "Amazon fire 7 16gb",
+      "qty": 1,
+      "trackings": {
+        "original": "1Z14V49EYW33021458",
+        "hn504": "",
+        "others": []
+      },
+      "status": "En camino",
+      "tagIds": [
+        "pendienteSeguimiento"
+      ],
+      "purchase": {
+        "total": "50.29",
+        "currency": "USD",
+        "method": "Tarjeta 5814 HN ebay"
+      },
+      "notes": "",
+      "images": [
+        {
+          "path": "data/images/1772403266419-fa7se8ky/1772403359616_1.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1772403266419-fa7se8ky/1772403359616_1.jpg"
+        },
+        {
+          "path": "data/images/1772403266419-fa7se8ky/1772403359616_2.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1772403266419-fa7se8ky/1772403359616_2.jpg"
+        }
+      ],
+      "createdAt": "2026-03-01T22:15:59.616Z",
+      "updatedAt": "2026-03-01T22:15:59.616Z"
+    },
     {
       "id": "1772344645432-nyuflfvx",
       "title": "Roku streaming stick hd",
