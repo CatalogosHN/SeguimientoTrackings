@@ -1,7 +1,40 @@
 {
   "version": 1,
-  "updatedAt": "2026-02-26T05:04:41.532Z",
+  "updatedAt": "2026-03-01T04:43:27.546Z",
   "items": [
+    {
+      "id": "1772340127712-l7xzfyr4",
+      "title": "Palo selfie GoPro insta con soporte",
+      "qty": 2,
+      "trackings": {
+        "original": "Sin todavia",
+        "hn504": "",
+        "others": []
+      },
+      "status": "En camino",
+      "tagIds": [
+        "esperandoGenerenTracking",
+        "pendienteSeguimiento"
+      ],
+      "purchase": {
+        "total": "37.77",
+        "currency": "USD",
+        "method": "Google Pay 5814 HN"
+      },
+      "notes": "Aliexpress",
+      "images": [
+        {
+          "path": "data/images/1772340127712-l7xzfyr4/1772340205021_1.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1772340127712-l7xzfyr4/1772340205021_1.jpg"
+        },
+        {
+          "path": "data/images/1772340127712-l7xzfyr4/1772340205021_2.jpg",
+          "url": "https://raw.githubusercontent.com/CatalogosHN/SeguimientoTrackings/main/data/images/1772340127712-l7xzfyr4/1772340205021_2.jpg"
+        }
+      ],
+      "createdAt": "2026-03-01T04:43:25.020Z",
+      "updatedAt": "2026-03-01T04:43:25.020Z"
+    },
     {
       "id": "1772082147673-v9lickz2",
       "title": "Vidrios huella 3 x200pro y soporte celular 1",
