@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-01T04:44:03.089Z",
+  "updatedAt": "2026-03-01T04:45:16.198Z",
   "items": [
     {
       "id": "1772340127712-l7xzfyr4",
@@ -19,7 +19,7 @@
       "purchase": {
         "total": "37.77",
         "currency": "USD",
-        "method": "Google Pay 5814 HN"
+        "method": "Google Pay 5814 HN aliexpress"
       },
       "notes": "Aliexpress",
       "images": [
@@ -33,7 +33,7 @@
         }
       ],
       "createdAt": "2026-03-01T04:43:25.020Z",
-      "updatedAt": "2026-03-01T04:43:25.020Z"
+      "updatedAt": "2026-03-01T04:45:16.198Z"
     },
     {
       "id": "1772082147673-v9lickz2",
